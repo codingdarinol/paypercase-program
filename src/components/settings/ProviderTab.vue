@@ -1,119 +1,219 @@
 <template>
-<div>
-    <!-- Search group -->
-    <div class="group-box mb-12">
-        <span class="group-box__title">ค้นหาพนักงานใน HOSxP</span>
-        <div style="padding-top:12px">
-            <div class="flex items-center gap-8 mb-8">
-                <label>health_med_provider_id :</label>
-                <input type="number" v-model.number="searchId" placeholder="เช่น 5" style="width:120px"
-                    @keydown.enter="search" />
-                <button class="btn btn-secondary" :disabled="searching" @click="search">
-                    <span v-if="searching" class="spinner" style="width:12px;height:12px;border-width:2px" />
-                    🔍 ค้นหาใน HOSxP
-                </button>
-            </div>
+    <div>
+        <div class="group-box mb-12">
+            <span class="group-box__title">Tambah Terapis</span>
+            <div style="padding-top: 12px">
+                <div
+                    class="form-grid"
+                    style="
+                        max-width: 760px;
+                        grid-template-columns: 160px minmax(0, 1fr) 160px minmax(0, 1fr);
+                    "
+                >
+                    <label>ID lokal :</label>
+                    <input
+                        v-model="form.health_med_provider_id"
+                        type="number"
+                        min="1"
+                        placeholder="Opsional, akan dibuat otomatis bila kosong"
+                    />
 
-            <div v-if="lookupResult" class="form-grid" style="max-width:460px;margin-bottom:10px">
-                <label>provider_id :</label>
-                <input type="text" :value="lookupResult.health_med_provider_id" readonly />
-                <label>ชื่อ-นามสกุล :</label>
-                <input type="text" :value="lookupResult.health_med_provider_full_name" readonly
-                    style="min-width:240px" />
-                <label>ชื่อย่อ :</label>
-                <input type="text" v-model="shortName" placeholder="ชื่อย่อสำหรับแสดงในโปรแกรม" style="width:220px" />
-            </div>
+                    <label>Nama singkat :</label>
+                    <input
+                        v-model="form.short_name"
+                        type="text"
+                        placeholder="Mis. Terapis A"
+                    />
 
-            <div v-if="lookupResult" class="flex gap-8">
-                <button class="btn btn-primary" @click="save">💾 บันทึกพนักงาน</button>
-            </div>
+                    <label>Nama lengkap :</label>
+                    <input
+                        v-model="form.full_name"
+                        type="text"
+                        placeholder="Nama lengkap terapis"
+                    />
+                </div>
 
-            <div v-if="msg" class="alert mt-8" :class="msgOk ? 'alert-success' : 'alert-error'">{{ msg }}</div>
-            <div v-if="notFound" class="alert alert-warning mt-8">ไม่พบ provider_id "{{ searchId }}" ใน HOSxP</div>
-        </div>
-    </div>
+                <p class="text-sm text-gray mt-8">
+                    ID lokal hanya dipakai sebagai penanda internal di SQLite.
+                </p>
 
-    <!-- Saved list -->
-    <div class="group-box">
-        <span class="group-box__title">พนักงานที่บันทึกแล้ว</span>
-        <div style="padding-top:10px">
-            <div class="table-wrapper" style="max-height:280px">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="width:40px">#</th>
-                            <th>provider_id (HOSxP)</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th>ชื่อย่อ</th>
-                            <th style="width:60px">ลบ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(r, i) in list" :key="r.id">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ r.health_med_provider_id }}</td>
-                            <td>{{ r.full_name }}</td>
-                            <td>{{ r.short_name }}</td>
-                            <td><button class="btn btn-danger btn-sm" @click="del(r.id)">🗑️</button></td>
-                        </tr>
-                        <tr v-if="list.length === 0">
-                            <td colspan="5" style="text-align:center;color:var(--text-gray);padding:20px">ยังไม่มีข้อมูล
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="flex gap-8 mt-12">
+                    <button class="btn btn-primary" @click="save">
+                        Simpan Terapis
+                    </button>
+                    <button class="btn btn-ghost" @click="clearForm">
+                        Reset
+                    </button>
+                </div>
+
+                <div
+                    v-if="msg"
+                    class="alert mt-8"
+                    :class="msgOk ? 'alert-success' : 'alert-error'"
+                >
+                    {{ msg }}
+                </div>
             </div>
         </div>
+
+        <div class="group-box">
+            <span class="group-box__title">Terapis Tersimpan</span>
+            <div style="padding-top: 10px">
+                <div class="table-wrapper" style="max-height: 340px">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px">#</th>
+                                <th style="width: 140px">ID lokal</th>
+                                <th>Nama lengkap</th>
+                                <th style="width: 180px">Nama singkat</th>
+                                <th style="width: 60px">Hapus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in list" :key="item.id">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ item.health_med_provider_id }}</td>
+                                <td>{{ item.full_name }}</td>
+                                <td>{{ item.short_name }}</td>
+                                <td>
+                                    <button
+                                        class="btn btn-danger btn-sm"
+                                        @click="remove(item.id)"
+                                    >
+                                        Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr v-if="list.length === 0">
+                                <td
+                                    colspan="5"
+                                    style="
+                                        text-align: center;
+                                        color: var(--text-gray);
+                                        padding: 20px;
+                                    "
+                                >
+                                    Belum ada data.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import * as cmd from '@/composables/useCommands'
-import type { ProviderConfig, ProviderLookup } from '@/types'
+import { onMounted, ref } from "vue";
+import * as cmd from "@/composables/useCommands";
+import type { ProviderConfig } from "@/types";
 
-const searchId = ref<number | null>(null)
-const lookupResult = ref<ProviderLookup | null>(null)
-const shortName = ref('')
-const list = ref<ProviderConfig[]>([])
-const searching = ref(false)
-const notFound = ref(false)
-const msg = ref(''); const msgOk = ref(true)
+type ProviderForm = {
+    health_med_provider_id: string;
+    full_name: string;
+    short_name: string;
+};
 
-onMounted(load)
+const list = ref<ProviderConfig[]>([]);
+const form = ref<ProviderForm>(createEmptyForm());
+const msg = ref("");
+const msgOk = ref(true);
 
-async function load() {
-    try { list.value = await cmd.getAllProviders() } catch { }
+onMounted(load);
+
+function createEmptyForm(): ProviderForm {
+    return {
+        health_med_provider_id: "",
+        full_name: "",
+        short_name: "",
+    };
 }
 
-async function search() {
-    notFound.value = false; lookupResult.value = null; msg.value = ''; shortName.value = ''
-    if (!searchId.value) return
-    searching.value = true
+function resetForm(clearMessage = true) {
+    form.value = createEmptyForm();
+    if (clearMessage) {
+        msg.value = "";
+    }
+}
+
+function clearForm() {
+    resetForm(true);
+}
+
+function buildLocalId() {
+    return Date.now().toString();
+}
+
+async function load() {
     try {
-        const r = await cmd.lookupProvider(searchId.value)
-        if (r) { lookupResult.value = r }
-        else notFound.value = true
-    } catch (e: any) { msg.value = String(e); msgOk.value = false }
-    finally { searching.value = false }
+        list.value = await cmd.getAllProviders();
+    } catch {}
 }
 
 async function save() {
-    if (!lookupResult.value) return
-    msg.value = ''
+    msg.value = "";
+
+    const fullName = form.value.full_name.trim();
+    const shortName = form.value.short_name.trim();
+    const rawId = form.value.health_med_provider_id.trim() || buildLocalId();
+    const providerId = Number(rawId);
+
+    if (!fullName) {
+        msg.value = "Nama lengkap wajib diisi.";
+        msgOk.value = false;
+        return;
+    }
+
+    if (!shortName) {
+        msg.value = "Nama singkat wajib diisi.";
+        msgOk.value = false;
+        return;
+    }
+
+    if (!Number.isInteger(providerId) || providerId <= 0) {
+        msg.value = "ID lokal harus berupa angka bulat positif.";
+        msgOk.value = false;
+        return;
+    }
+
+    const duplicate = list.value.find(
+        (item) =>
+            item.health_med_provider_id === providerId ||
+            item.full_name.toLowerCase() === fullName.toLowerCase() ||
+            item.short_name.toLowerCase() === shortName.toLowerCase(),
+    );
+
+    if (duplicate) {
+        msg.value = "Terapis dengan ID atau nama yang sama sudah ada.";
+        msgOk.value = false;
+        return;
+    }
+
     try {
-        await cmd.saveProvider(lookupResult.value.health_med_provider_id, lookupResult.value.health_med_provider_full_name, shortName.value.trim())
-        msg.value = `บันทึกพนักงาน "${lookupResult.value.health_med_provider_full_name}" สำเร็จ`
-        msgOk.value = true
-        lookupResult.value = null; searchId.value = null; shortName.value = ''
-        await load()
-    } catch (e: any) { msg.value = String(e); msgOk.value = false }
+        await cmd.saveProvider(providerId, fullName, shortName);
+        msg.value = `Terapis "${shortName}" berhasil disimpan.`;
+        msgOk.value = true;
+        resetForm(false);
+        await load();
+    } catch (error: any) {
+        msg.value = String(error);
+        msgOk.value = false;
+    }
 }
 
-async function del(id: number) {
-    if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return
-    try { await cmd.deleteProvider(id); await load() }
-    catch (e: any) { msg.value = String(e); msgOk.value = false }
+async function remove(id: number) {
+    if (!confirm("Hapus terapis ini?")) return;
+
+    try {
+        await cmd.deleteProvider(id);
+        await load();
+        msg.value = "Terapis berhasil dihapus.";
+        msgOk.value = true;
+    } catch (error: any) {
+        msg.value = String(error);
+        msgOk.value = false;
+    }
 }
 </script>

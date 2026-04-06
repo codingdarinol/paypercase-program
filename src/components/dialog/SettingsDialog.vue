@@ -2,7 +2,7 @@
     <div class="modal-overlay" @click.self="$emit('close')">
         <div class="modal" style="width: 860px; height: 680px">
             <div class="modal__header">
-                <span class="modal__title">⚙️ การตั้งค่าระบบ</span>
+                <span class="modal__title">⚙️ Pengaturan Sistem</span>
                 <button class="modal__close" @click="$emit('close')">✕</button>
             </div>
 
@@ -48,7 +48,7 @@
 
             <div class="modal__footer">
                 <button class="btn btn-secondary" @click="$emit('close')">
-                    ปิด
+                    Tutup
                 </button>
             </div>
         </div>
@@ -67,10 +67,10 @@ defineEmits<{ close: [] }>();
 
 const activeSubTab = ref("pttype");
 const tabs = [
-    { key: "pttype", label: "💳 สิทธิการรักษา" },
-    { key: "procedure", label: "🩺 หัตถการ" },
-    { key: "drug", label: "💊 ยาสมุนไพร" },
-    { key: "provider", label: "👤 พนักงาน" },
-    { key: "payout", label: "💰 ค่าตอบแทน" },
+    { key: "pttype", label: "💳 Hak Perawatan" },
+    { key: "procedure", label: "🩺 Tindakan" },
+    { key: "drug", label: "💊 Obat Herbal" },
+    { key: "provider", label: "👤 Terapis" },
+    { key: "payout", label: "💰 Insentif" },
 ];
 </script>

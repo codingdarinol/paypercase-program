@@ -1,67 +1,10 @@
-// commands/settings.rs — Settings CRUD commands
-
 use std::sync::Arc;
+
 use tauri::State;
 
-use crate::db::{hosxp, local};
+use crate::db::local;
 use crate::models::*;
 use crate::state::AppState;
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  HOSxP Lookup (ใช้ในหน้าตั้งค่า เพื่อค้นหาข้อมูลจาก HOSxP)
-// ─────────────────────────────────────────────────────────────────────────────
-
-#[tauri::command]
-pub fn lookup_pttype(
-    hipdata_code: String,
-    state: State<'_, Arc<AppState>>,
-) -> Result<Option<PttypeLookup>, String> {
-    let pool_guard = state.hosxp_pool.lock().map_err(|e| e.to_string())?;
-    let pool = pool_guard
-        .as_ref()
-        .ok_or("ยังไม่ได้เชื่อมต่อ HOSxP กรุณาตั้งค่าการเชื่อมต่อก่อน")?;
-    hosxp::fetch_pttype_by_hipdata(pool, &hipdata_code)
-}
-
-#[tauri::command]
-pub fn lookup_procedure(
-    icode: String,
-    state: State<'_, Arc<AppState>>,
-) -> Result<Option<ItemLookup>, String> {
-    let pool_guard = state.hosxp_pool.lock().map_err(|e| e.to_string())?;
-    let pool = pool_guard
-        .as_ref()
-        .ok_or("ยังไม่ได้เชื่อมต่อ HOSxP กรุณาตั้งค่าการเชื่อมต่อก่อน")?;
-    hosxp::fetch_procedure_by_icode(pool, &icode)
-}
-
-#[tauri::command]
-pub fn lookup_drug(
-    icode: String,
-    state: State<'_, Arc<AppState>>,
-) -> Result<Option<ItemLookup>, String> {
-    let pool_guard = state.hosxp_pool.lock().map_err(|e| e.to_string())?;
-    let pool = pool_guard
-        .as_ref()
-        .ok_or("ยังไม่ได้เชื่อมต่อ HOSxP กรุณาตั้งค่าการเชื่อมต่อก่อน")?;
-    hosxp::fetch_drug_by_icode(pool, &icode)
-}
-
-#[tauri::command]
-pub fn lookup_provider(
-    provider_id: i64,
-    state: State<'_, Arc<AppState>>,
-) -> Result<Option<ProviderLookup>, String> {
-    let pool_guard = state.hosxp_pool.lock().map_err(|e| e.to_string())?;
-    let pool = pool_guard
-        .as_ref()
-        .ok_or("ยังไม่ได้เชื่อมต่อ HOSxP กรุณาตั้งค่าการเชื่อมต่อก่อน")?;
-    hosxp::fetch_provider_by_id(pool, provider_id)
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Pttypes
-// ─────────────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_all_pttypes(state: State<'_, Arc<AppState>>) -> Result<Vec<PttypeConfig>, String> {
@@ -89,12 +32,10 @@ pub fn delete_pttype(id: i64, state: State<'_, Arc<AppState>>) -> Result<(), Str
     local::delete_pttype(&db, id).map_err(|e| e.to_string())
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Procedures
-// ─────────────────────────────────────────────────────────────────────────────
-
 #[tauri::command]
-pub fn get_all_procedures(state: State<'_, Arc<AppState>>) -> Result<Vec<ProcedureConfig>, String> {
+pub fn get_all_procedures(
+    state: State<'_, Arc<AppState>>,
+) -> Result<Vec<ProcedureConfig>, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
     local::get_all_procedures(&db).map_err(|e| e.to_string())
 }
@@ -115,10 +56,6 @@ pub fn delete_procedure(id: i64, state: State<'_, Arc<AppState>>) -> Result<(), 
     let db = state.db.lock().map_err(|e| e.to_string())?;
     local::delete_procedure(&db, id).map_err(|e| e.to_string())
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Drugs
-// ─────────────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_all_drugs(state: State<'_, Arc<AppState>>) -> Result<Vec<DrugConfig>, String> {
@@ -143,10 +80,6 @@ pub fn delete_drug(id: i64, state: State<'_, Arc<AppState>>) -> Result<(), Strin
     local::delete_drug(&db, id).map_err(|e| e.to_string())
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Providers
-// ─────────────────────────────────────────────────────────────────────────────
-
 #[tauri::command]
 pub fn get_all_providers(state: State<'_, Arc<AppState>>) -> Result<Vec<ProviderConfig>, String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
@@ -170,10 +103,6 @@ pub fn delete_provider(id: i64, state: State<'_, Arc<AppState>>) -> Result<(), S
     let db = state.db.lock().map_err(|e| e.to_string())?;
     local::delete_provider(&db, id).map_err(|e| e.to_string())
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Payout Options
-// ─────────────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_payout_options(state: State<'_, Arc<AppState>>) -> Result<Vec<PayoutOption>, String> {

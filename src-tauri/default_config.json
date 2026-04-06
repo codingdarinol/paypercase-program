@@ -10,11 +10,11 @@
   "payout_options": [
     {
       "amount": 125.0,
-      "label": "สำหรับ ขรก, อปท, ชำระเงินเอง"
+      "label": "Untuk PNS, Pemda, Bayar Sendiri"
     },
     {
       "amount": 20.0,
-      "label": "สำหรับ บัตรทอง, ปกส"
+      "label": "Untuk UHC, Jaminan Sosial"
     }
   ],
   "pttypes": [
@@ -23,241 +23,241 @@
       "name": "ANC(บัตรประกันสุขภาพถ้วนหน้า)",
       "pcode": "AI",
       "hipdata_code": "UCS",
-      "short_name": "บัตรทอง"
+      "short_name": "UHC"
     },
     {
       "pttype": "22",
       "name": "ข้าราชการ กรมบัญชีกลาง รูดEDC",
       "pcode": "A2",
       "hipdata_code": "OFC",
-      "short_name": "ขรก"
+      "short_name": "PNS"
     },
     {
       "pttype": "24",
       "name": "ข้าราชการ ท้องถิ่น(อปท.)",
       "pcode": "A2",
       "hipdata_code": "LGO",
-      "short_name": "อปท"
+      "short_name": "Pemda"
     },
     {
       "pttype": "01",
       "name": "ชำระเงินเอง พรบ.รถ(ไม่ส่งหลักฐาน)",
       "pcode": "A1",
       "hipdata_code": "CSH",
-      "short_name": "ชำระเงินเอง"
+      "short_name": "Mandiri"
     },
     {
       "pttype": "30",
       "name": "ประกันสังคม ในเครือข่าย รพ.ลพบุรี",
       "pcode": "A7",
       "hipdata_code": "SSS",
-      "short_name": "ปกส"
+      "short_name": "Jamsos"
     }
   ],
   "procedures": [
     {
       "icode": "3003038",
       "name": "15การนวดด้วยวิธีการแพทย์แผนไทยแบบราชสำนัก - 11",
-      "short_name": "OPDนวด"
+      "short_name": "OPD Pijat"
     },
     {
       "icode": "3002725",
       "name": "15อบไอน้ำสมุนไพร - 00",
-      "short_name": "OPDอบสมุนไพร"
+      "short_name": "OPD Uap Herbal"
     },
     {
       "icode": "3002724",
       "name": "15ประคบสมุนไพร - 20",
-      "short_name": "OPDประคบ"
+      "short_name": "OPD Kompres Herbal"
     },
     {
       "icode": "3003888",
       "name": "15การพอกยาสมุนไพร-35",
-      "short_name": "OPDพอกเข่า"
+      "short_name": "OPD Balur Lutut"
     },
     {
       "icode": "3003012",
       "name": "15การบริบาลหญิงหลังคลอดด้วยการทับหม้อเกลือ - 12",
-      "short_name": "OPDหลังคลอดทับหม้อเกลือ"
+      "short_name": "OPD Nifas Pot Garam"
     },
     {
       "icode": "3003013",
       "name": "15การบริบาลหญิงหลังคลอดด้วยการนวด - 13",
-      "short_name": "OPDหลังคลอดนวด"
+      "short_name": "OPD Nifas Pijat"
     },
     {
       "icode": "3003021",
       "name": "15การบริบาลหญิงหลังคลอดด้วยการปฏิบัติตัวสำหรับหลังคลอด - 30",
-      "short_name": "OPDหลังคลอดแนะนำ"
+      "short_name": "OPD Edukasi Nifas"
     },
     {
       "icode": "3003014",
       "name": "15การบริบาลหญิงหลังคลอดด้วยการประคบสมุนไพร - 14",
-      "short_name": "OPDหลังคลอดประคบ"
+      "short_name": "OPD Nifas Kompres"
     },
     {
       "icode": "3003016",
       "name": "15การบริบาลหญิงหลังคลอดด้วยการอบไอน้ำสมุนไพร - 16",
-      "short_name": "OPDหลังคลอดอบสมุนไพร"
+      "short_name": "OPD Nifas Uap Herbal"
     },
     {
       "icode": "3003312",
       "name": "15ค่าทับหม้อเกลือเพื่อการฟื้นฟูมารดาหลังคลอด",
-      "short_name": "ฟื้นฟูหลังคลอดทับหม้อเกลือ"
+      "short_name": "Rehab Nifas Pot Garam"
     },
     {
       "icode": "3003307",
       "name": "15ค่านวดเพื่อการบำบัดรักษาโรค",
-      "short_name": "นวด"
+      "short_name": "Pijat"
     },
     {
       "icode": "3003308",
       "name": "15ค่านวดเพื่อการฟื้นฟูสมรรถภาพสำหรับผู้ป่วยโรคอัมพฤกษ์อัมพาต โรคสันนิบาต และการฟื้นฟูมารดาหลังคลอด",
-      "short_name": "ฟื้นฟูนวด"
+      "short_name": "Rehab Pijat"
     },
     {
       "icode": "3003309",
       "name": "15ค่านวดและประคบสมุนไพรเพื่อการบำบัดรักษาโรค",
-      "short_name": "นวด+ประคบ"
+      "short_name": "Pijat + Kompres"
     },
     {
       "icode": "3003310",
       "name": "15ค่านวดและประคบสมุนไพรเพื่อการฟื้นฟูสมรรถภาพสำหรับผู้ป่วยโรคอัมพฤกษ์อัมภาต และ ฟื้นฟูมารดาหลังคลอด",
-      "short_name": "ฟื้นฟูนวด+ประคบ"
+      "short_name": "Rehab Pijat + Kompres"
     },
     {
       "icode": "3003311",
       "name": "15ค่าประคบสมุนไพรสำหรับการบำบัดรักษาโรค การฟื้นฟูสมรรถภาพผู้ป่วยและฟื้นฟูมารดาหลังคลอด",
-      "short_name": "ฟื้นฟูประคบ"
+      "short_name": "Rehab Kompres"
     },
     {
       "icode": "3003313",
       "name": "15ค่าอบไอน้ำสมุนไพรสำหรับการบำบัดรักษาโรคหอบ หืด  การฟื้นฟูสมรรถภาพผู้ป่วยและการฟื้นฟูมารดาหลังคลอด",
-      "short_name": "ฟื้นฟูอบสมุนไพร"
+      "short_name": "Rehab Uap Herbal"
     }
   ],
   "drugs": [
     {
       "icode": "1660007",
       "name": "ยาไพล",
-      "short_name": "ครีมไพล"
+      "short_name": "Krim Phlai"
     },
     {
       "icode": "1580016",
       "name": "สหัสธารา",
-      "short_name": "สหัส"
+      "short_name": "Sahatsara"
     },
     {
       "icode": "1620004",
       "name": "ยาประคบ",
-      "short_name": "ประคบ"
+      "short_name": "Kompres"
     },
     {
       "icode": "1580019",
       "name": "เถาวัลย์เปรียง",
-      "short_name": "เถา"
+      "short_name": "Thao Wan"
     },
     {
       "icode": "1670027",
       "name": "ยาเหลืองปิดสมุทร (แบบเม็ด)",
-      "short_name": "เหลือง"
+      "short_name": "Lueang"
     },
     {
       "icode": "1580003",
       "name": "ขิง",
-      "short_name": "ขิง"
+      "short_name": "Jahe"
     },
     {
       "icode": "1610009",
       "name": "ธาตุอบเชย",
-      "short_name": "อบเชย"
+      "short_name": "Kayu Manis"
     },
     {
       "icode": "1500018",
       "name": "ขมิ้นชัน 500 mg.",
-      "short_name": "ขมิ้น"
+      "short_name": "Kunyit"
     },
     {
       "icode": "1530080",
       "name": "ยาผสมเพชรสังฆาต",
-      "short_name": "เพชร"
+      "short_name": "Phet"
     },
     {
       "icode": "1580023",
       "name": "มะขามแขก",
-      "short_name": "แขก"
+      "short_name": "Senna"
     },
     {
       "icode": "1610025",
       "name": "ยาหอมเทพจิต",
-      "short_name": "เทพ"
+      "short_name": "Thep Chit"
     },
     {
       "icode": "1650006",
       "name": "ศุขไสยาศน์",
-      "short_name": "ศุข"
+      "short_name": "Suk Saiyat"
     },
     {
       "icode": "1550013",
       "name": "มะระขี้นก",
-      "short_name": "มะระ"
+      "short_name": "Pare"
     },
     {
       "icode": "1600027",
       "name": "รางจืด",
-      "short_name": "จืด"
+      "short_name": "Rang Jued"
     },
     {
       "icode": "1580004",
       "name": "ฟ้าทะลายโจร  500 mg.",
-      "short_name": "ฟ้า"
+      "short_name": "Andro"
     },
     {
       "icode": "1660013",
       "name": "ประสะมะแว้ง 200 mg.",
-      "short_name": "แว้ง"
+      "short_name": "Ma Waeng"
     },
     {
       "icode": "1590008",
       "name": "ยาแก้ไอมะขามป้อม",
-      "short_name": "ป้อม"
+      "short_name": "Amla"
     },
     {
       "icode": "1530061",
       "name": "พญายอครีม",
-      "short_name": "ยอ"
+      "short_name": "Phaya Yo"
     },
     {
       "icode": "1650044",
       "name": "ยาแก้ลมแก้เส้น",
-      "short_name": "แก้ลม"
+      "short_name": "Anti Angin"
     }
   ],
   "providers": [
     {
       "health_med_provider_id": 3,
       "full_name": "นางทิพวัลย์ อินทร์จาด",
-      "short_name": "ทิพวัลย์"
+      "short_name": "Terapis 3"
     },
     {
       "health_med_provider_id": 5,
       "full_name": "นางสาวธัญสุดา ยงยุทธิ์",
-      "short_name": "ธัญสุดา"
+      "short_name": "Terapis 5"
     },
     {
       "health_med_provider_id": 8,
       "full_name": "พทป.อชิรญาณ์ รมยศิริไทย",
-      "short_name": "อชิรญาณ์"
+      "short_name": "Terapis 8"
     },
     {
       "health_med_provider_id": 10,
       "full_name": "พท.จิรวรรณ เจริญมา",
-      "short_name": "จิรวรรณ"
+      "short_name": "Terapis 10"
     },
     {
       "health_med_provider_id": 12,
       "full_name": "นางพจนีย์ กิจสำเร็จ",
-      "short_name": "พจนีย์"
+      "short_name": "Terapis 12"
     }
   ]
 }

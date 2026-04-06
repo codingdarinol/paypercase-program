@@ -2,17 +2,17 @@
     <div class="flex-col h-full" style="gap: 8px; padding: 12px 12px 8px">
         <!-- Filter / Action Panel -->
         <div class="group-box" style="flex-shrink: 0">
-            <span class="group-box__title">📋 ข้อมูลรอการส่งออก</span>
+            <span class="group-box__title">📋 Data Menunggu Ekspor</span>
             <div
                 class="flex items-center gap-12"
                 style="padding-top: 8px; flex-wrap: wrap"
             >
-                <span class="nowrap">วันที่ :</span>
+                <span class="nowrap">Tanggal :</span>
                 <CalendarPicker v-model="selectedDate" />
 
-                <span class="nowrap">ผู้ให้บริการ :</span>
+                <span class="nowrap">Terapis :</span>
                 <select v-model="selectedProvider" style="width: 240px">
-                    <option value="">ทั้งหมด</option>
+                    <option value="">Semua</option>
                     <option
                         v-for="p in providers"
                         :key="p.health_med_provider_id"
@@ -23,7 +23,7 @@
                 </select>
 
                 <button class="btn btn-secondary" @click="search">
-                    🔍 ค้นหา
+                    🔍 Cari
                 </button>
 
                 <span class="flex-1" />
@@ -33,7 +33,7 @@
                     :disabled="filteredRows.length === 0"
                     @click="doExport"
                 >
-                    📤 ส่งออก CSV
+                    📤 Ekspor CSV
                 </button>
             </div>
         </div>
@@ -49,18 +49,18 @@
                 <thead>
                     <tr>
                         <th style="width: 40px">#</th>
-                        <th style="width: 90px">วันที่</th>
+                        <th style="width: 90px">Tanggal</th>
                         <th style="width: 75px">HN</th>
                         <th style="width: 110px">CID</th>
-                        <th style="width: 85px">ชื่อ</th>
-                        <th style="width: 85px">นามสกุล</th>
-                        <th style="width: 110px">สิทธิ</th>
-                        <th style="width: 150px">อาการสำคัญ</th>
-                        <th>การรักษา</th>
-                        <th style="width: 130px">ผู้ให้บริการ</th>
-                        <th style="width: 100px">รายได้รวม (฿)</th>
-                        <th style="width: 100px">ค่าตอบแทน (฿)</th>
-                        <th style="width: 60px">ลบ</th>
+                        <th style="width: 85px">Nama Depan</th>
+                        <th style="width: 85px">Nama Belakang</th>
+                        <th style="width: 110px">Hak</th>
+                        <th style="width: 150px">Keluhan Utama</th>
+                        <th>Tindakan</th>
+                        <th style="width: 130px">Terapis</th>
+                        <th style="width: 100px">Total Pendapatan (฿)</th>
+                        <th style="width: 100px">Total Insentif (฿)</th>
+                        <th style="width: 60px">Hapus</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,7 +99,7 @@
                             <button
                                 class="btn btn-danger btn-sm"
                                 @click="deleteRow(row.id)"
-                                title="ลบรายการนี้"
+                                title="Hapus data ini"
                             >
                                 🗑️
                             </button>
@@ -114,7 +114,7 @@
                                 color: var(--text-gray);
                             "
                         >
-                            กดปุ่ม "ค้นหา" เพื่อแสดงรายการ
+                            Klik tombol "Cari" untuk menampilkan daftar
                         </td>
                     </tr>
                 </tbody>
@@ -126,14 +126,14 @@
             class="flex items-center gap-12"
             style="font-size: 12px; color: var(--text-muted); flex-shrink: 0"
         >
-            <span>พบ {{ filteredRows.length }} รายการ</span>
+            <span>Ditemukan {{ filteredRows.length }} data</span>
             <span v-if="filteredRows.length > 0">|</span>
             <span v-if="filteredRows.length > 0"
-                >รายได้รวม: {{ totalRevenue.toFixed(2) }} ฿</span
+                >Total pendapatan: {{ totalRevenue.toFixed(2) }} ฿</span
             >
             <span v-if="filteredRows.length > 0">|</span>
             <span v-if="filteredRows.length > 0"
-                >ค่าตอบแทนรวม: {{ totalPayout.toFixed(2) }} ฿</span
+                >Total insentif: {{ totalPayout.toFixed(2) }} ฿</span
             >
         </div>
     </div>
@@ -292,7 +292,7 @@ async function search() {
 async function deleteRow(id: number) {
     if (
         !confirm(
-            "ต้องการลบรายการนี้ออกจากข้อมูลรอการส่งออกใช่หรือไม่?\n(การลบจะปลดล็อกรายการในหน้าแสดงข้อมูล)",
+            "Hapus data ini dari daftar menunggu ekspor?\n(Data yang dihapus juga akan hilang dari halaman Input Data.)",
         )
     )
         return;
@@ -301,7 +301,7 @@ async function deleteRow(id: number) {
         allRows.value = allRows.value.filter((r) => r.id !== id);
         emit("record-deleted");
         store.triggerPendingRefresh();
-        showToast("ลบรายการสำเร็จ", "success");
+        showToast("Data berhasil dihapus", "success");
     } catch (e: any) {
         error.value = String(e);
     }
@@ -358,7 +358,7 @@ async function doExport() {
         const { writeTextFile } = await import("@tauri-apps/plugin-fs");
         await writeTextFile(filePath, csvContent);
         showToast(
-            `ส่งออกสำเร็จ ${filteredRows.value.length} รายการ → ${filePath}`,
+            `Berhasil mengekspor ${filteredRows.value.length} data → ${filePath}`,
             "success",
             5000,
         );

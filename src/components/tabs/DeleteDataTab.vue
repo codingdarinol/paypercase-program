@@ -2,15 +2,15 @@
     <div class="flex-col h-full" style="gap: 16px; padding: 16px">
         <!-- Delete by date range -->
         <div class="group-box">
-            <span class="group-box__title">🗑️ ลบข้อมูลตามช่วงวันที่</span>
+            <span class="group-box__title">🗑️ Hapus Data Berdasarkan Rentang Tanggal</span>
             <div style="padding-top: 12px">
                 <div
                     class="flex items-center gap-12 mb-12"
                     style="flex-wrap: wrap"
                 >
-                    <span class="nowrap">วันที่เริ่มต้น :</span>
+                    <span class="nowrap">Tanggal mulai :</span>
                     <CalendarPicker v-model="dateFrom" />
-                    <span class="nowrap">วันที่สิ้นสุด :</span>
+                    <span class="nowrap">Tanggal akhir :</span>
                     <CalendarPicker v-model="dateTo" />
                 </div>
 
@@ -29,14 +29,14 @@
 
                 <div class="flex items-center gap-8">
                     <button class="btn btn-secondary" @click="previewRange">
-                        🔍 ดูรายการที่จะลบ
+                        🔍 Pratinjau Data yang Akan Dihapus
                     </button>
                     <button
                         class="btn btn-danger"
                         :disabled="previewRows.length === 0"
                         @click="deleteRange"
                     >
-                        🗑️ ลบข้อมูลในช่วงวันที่เลือก
+                        🗑️ Hapus Data pada Rentang Ini
                     </button>
                 </div>
 
@@ -50,12 +50,12 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>วันที่</th>
+                                <th>Tanggal</th>
                                 <th>VN</th>
                                 <th>HN</th>
-                                <th>ชื่อ-นามสกุล</th>
-                                <th>ผู้ให้บริการ</th>
-                                <th>ค่าตอบแทน (฿)</th>
+                                <th>Nama Lengkap</th>
+                                <th>Terapis</th>
+                                <th>Insentif (฿)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -81,10 +81,10 @@
 
         <!-- Monthly stats -->
         <div class="group-box flex-col" style="flex: 1; min-height: 0">
-            <span class="group-box__title">📊 สถิติรายเดือน</span>
+            <span class="group-box__title">📊 Statistik Bulanan</span>
             <div class="flex items-center gap-8 mb-8" style="padding-top: 12px">
                 <button class="btn btn-secondary btn-sm" @click="loadStats">
-                    🔄 รีเฟรช
+                    🔄 Muat Ulang
                 </button>
             </div>
             <div class="table-wrapper flex-1 overflow-auto">
@@ -92,22 +92,22 @@
                     <thead>
                         <tr>
                             <th class="sortable" @click="sortStats('month')">
-                                เดือน {{ sortIcon("month") }}
+                                Bulan {{ sortIcon("month") }}
                             </th>
                             <th class="sortable" @click="sortStats('count')">
-                                จำนวน (ราย) {{ sortIcon("count") }}
+                                Jumlah (data) {{ sortIcon("count") }}
                             </th>
                             <th
                                 class="sortable"
                                 @click="sortStats('total_revenue')"
                             >
-                                รายได้รวม (฿) {{ sortIcon("total_revenue") }}
+                                Total Pendapatan (฿) {{ sortIcon("total_revenue") }}
                             </th>
                             <th
                                 class="sortable"
                                 @click="sortStats('total_payout')"
                             >
-                                ค่าตอบแทนรวม (฿) {{ sortIcon("total_payout") }}
+                                Total Insentif (฿) {{ sortIcon("total_payout") }}
                             </th>
                         </tr>
                     </thead>
@@ -137,7 +137,7 @@
                                     color: var(--text-gray);
                                 "
                             >
-                                ไม่มีข้อมูล
+                                Tidak ada data
                             </td>
                         </tr>
                     </tbody>
@@ -213,9 +213,9 @@ async function previewRange() {
             previewRows.value.length > 0
                 ? {
                       type: "warning",
-                      text: `พบ ${previewRows.value.length} รายการที่จะถูกลบในช่วงวันที่นี้`,
+                      text: `Ditemukan ${previewRows.value.length} data yang akan dihapus pada rentang tanggal ini`,
                   }
-                : { type: "info", text: "ไม่พบข้อมูลในช่วงวันที่ที่เลือก" };
+                : { type: "info", text: "Tidak ada data pada rentang tanggal yang dipilih" };
     } catch (e: any) {
         error.value = String(e);
     }
@@ -224,14 +224,14 @@ async function previewRange() {
 async function deleteRange() {
     if (
         !confirm(
-            `ต้องการลบข้อมูล ${previewRows.value.length} รายการในช่วงวันที่ ${dateFrom.value} ถึง ${dateTo.value} ใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้`,
+            `Hapus ${previewRows.value.length} data pada rentang ${dateFrom.value} sampai ${dateTo.value}?\n\nTindakan ini tidak dapat dibatalkan.`,
         )
     )
         return;
     error.value = "";
     try {
         const n = await cmd.deletePendingRange(dateFrom.value, dateTo.value);
-        showToast(`ลบ ${n} รายการสำเร็จ`, "success");
+        showToast(`Berhasil menghapus ${n} data`, "success");
         previewRows.value = [];
         rangeInfo.value = null;
         await loadStats();

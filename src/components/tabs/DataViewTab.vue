@@ -1,552 +1,725 @@
 <template>
     <div class="flex-col h-full" style="gap: 8px; padding: 12px 12px 8px">
-        <!-- Filter Panel -->
         <div class="group-box" style="flex-shrink: 0">
-            <span class="group-box__title">🔍 ตัวกรองข้อมูล</span>
+            <span class="group-box__title">Input Data Offline</span>
             <div
                 class="flex items-center gap-12"
                 style="padding-top: 8px; flex-wrap: wrap"
             >
-                <span class="nowrap">วันที่ :</span>
+                <span class="nowrap">Tanggal :</span>
                 <CalendarPicker v-model="selectedDate" />
 
-                <span class="nowrap">ผู้ให้บริการ :</span>
+                <span class="nowrap">Terapis :</span>
                 <select v-model="selectedProvider" style="width: 240px">
-                    <option value="">ทั้งหมด</option>
+                    <option value="">Semua</option>
                     <option
-                        v-for="p in providers"
-                        :key="p.health_med_provider_id"
-                        :value="p.full_name"
+                        v-for="option in providerFilterOptions"
+                        :key="option.value"
+                        :value="option.value"
                     >
-                        {{ p.short_name || p.full_name }}
+                        {{ option.label }}
                     </option>
                 </select>
 
-                <button
-                    class="btn btn-secondary"
-                    :disabled="loading"
-                    @click="loadData"
-                >
-                    <span
-                        v-if="loading"
-                        class="spinner"
-                        style="width: 14px; height: 14px; border-width: 2px"
-                    />
-                    🔄 ดึงข้อมูล
+                <button class="btn btn-secondary" @click="loadRows">
+                    Muat Ulang
                 </button>
 
                 <span class="flex-1" />
 
-                <button
-                    class="btn btn-primary"
-                    :disabled="!hasSelection"
-                    @click="saveSelected"
-                >
-                    💾 บันทึกที่เลือก
+                <button class="btn btn-primary" @click="openCreate">
+                    Tambah Data
                 </button>
+            </div>
+
+            <div class="alert alert-info mt-12" style="margin-bottom: 0">
+                Data pada halaman ini langsung disimpan ke SQLite lokal dan
+                otomatis masuk ke daftar menunggu ekspor.
             </div>
         </div>
 
-        <!-- Alert -->
         <div v-if="error" class="alert alert-error" style="flex-shrink: 0">
-            ⚠️ {{ error }}
+            {{ error }}
         </div>
 
-        <!-- Table -->
         <div class="table-wrapper flex-1 overflow-auto">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="width: 40px">#</th>
-                        <th style="width: 90px">วันที่</th>
+                        <th style="width: 95px">Tanggal</th>
                         <th style="width: 80px">HN</th>
-                        <th style="width: 115px">CID</th>
-                        <th style="width: 90px">ชื่อ</th>
-                        <th style="width: 90px">นามสกุล</th>
-                        <th style="width: 80px">สิทธิ</th>
-                        <th style="width: 160px">อาการสำคัญ</th>
-                        <th>การรักษา</th>
-                        <th style="width: 140px">ผู้ให้บริการ</th>
-                        <th style="width: 90px">ราคา (฿)</th>
-                        <th style="width: 110px">ค่าตอบแทน</th>
-                        <th style="width: 70px">บันทึก</th>
+                        <th style="width: 120px">NIK</th>
+                        <th style="width: 180px">Nama</th>
+                        <th style="width: 110px">Hak</th>
+                        <th style="width: 170px">Keluhan</th>
+                        <th style="width: 180px">Tindakan</th>
+                        <th style="width: 140px">Terapis</th>
+                        <th style="width: 110px">Pendapatan</th>
+                        <th style="width: 110px">Insentif</th>
+                        <th style="width: 140px">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr
-                        v-for="(row, idx) in filteredRows"
-                        :key="row.vn"
-                        :class="{
-                            'row-locked': row._locked,
-                            'row-warning': row._multi_provider,
-                        }"
-                    >
+                    <tr v-for="(row, index) in filteredRows" :key="row.id">
                         <td class="text-sm" style="text-align: center">
-                            {{ idx + 1 }}
+                            {{ index + 1 }}
                         </td>
-                        <td class="text-sm">{{ row.service_date }}</td>
+                        <td class="text-sm">{{ row.visit_date }}</td>
                         <td class="text-sm">{{ row.hn }}</td>
                         <td class="text-sm">{{ row.cid }}</td>
-                        <td>{{ row.first_name }}</td>
-                        <td>{{ row.last_name }}</td>
-                        <td>
-                            <span :title="row.pttype_display_name">{{
-                                shortPttype(row)
-                            }}</span>
-                        </td>
-                        <td :title="row.chief_complaint">
-                            {{ row.chief_complaint }}
-                        </td>
-                        <td :title="row.item_names" style="max-width: 200px">
-                            {{ shortProcedureDisplay(row) }}
-                        </td>
-                        <td>
-                            <span
-                                v-if="row._multi_provider"
-                                :title="
-                                    '⚠️ พบผู้ให้บริการมากกว่า 1 คน: ' +
-                                    row.provider_names
-                                "
-                            >
-                                ⚠️
-                                {{ shortProviderDisplay(row.provider_names) }}
-                            </span>
-                            <span v-else :title="row.provider_names">{{
-                                shortProviderDisplay(row.provider_names)
-                            }}</span>
-                        </td>
+                        <td>{{ fullName(row) }}</td>
+                        <td>{{ row.rights }}</td>
+                        <td :title="row.symptoms">{{ row.symptoms }}</td>
+                        <td :title="row.procedure">{{ row.procedure }}</td>
+                        <td :title="row.therapist">{{ row.therapist }}</td>
                         <td style="text-align: right">
-                            {{ row.total_sum_price.toFixed(2) }}
+                            {{ row.total_revenue.toFixed(2) }}
+                        </td>
+                        <td
+                            style="
+                                text-align: right;
+                                font-weight: bold;
+                                color: var(--highlight);
+                            "
+                        >
+                            {{ row.payout_amount.toFixed(2) }}
                         </td>
                         <td>
-                            <select
-                                v-if="!row._locked && !row._multi_provider"
-                                v-model="row._selected_payout"
-                                class="payout-select"
-                                style="width: 100%; font-size: 12px"
-                            >
-                                <option :value="null">— เลือก —</option>
-                                <option
-                                    v-for="opt in payoutOptions"
-                                    :key="opt.id"
-                                    :value="opt.amount"
+                            <div class="flex gap-8">
+                                <button
+                                    class="btn btn-secondary btn-sm"
+                                    @click="openEdit(row)"
                                 >
-                                    {{ opt.amount.toLocaleString() }} บาท
-                                </option>
-                            </select>
-                            <span
-                                v-else-if="row._locked"
-                                class="text-sm text-gray"
-                                >บันทึกแล้ว</span
-                            >
-                            <span v-else class="text-sm text-gray">N/A</span>
-                        </td>
-                        <td style="text-align: center">
-                            <input
-                                v-if="!row._locked && !row._multi_provider"
-                                type="checkbox"
-                                class="ppc-checkbox"
-                                v-model="selectedVns"
-                                :value="row.vn"
-                                :disabled="row._selected_payout == null"
-                            />
-                            <span v-else-if="row._locked" title="บันทึกไปแล้ว"
-                                >🔒</span
-                            >
-                            <span
-                                v-else
-                                title="ผู้ให้บริการมากกว่า 1 คน ไม่สามารถบันทึกได้"
-                                >⛔</span
-                            >
+                                    Ubah
+                                </button>
+                                <button
+                                    class="btn btn-danger btn-sm"
+                                    @click="removeRow(row.id)"
+                                >
+                                    Hapus
+                                </button>
+                            </div>
                         </td>
                     </tr>
-                    <tr v-if="filteredRows.length === 0 && !loading">
+                    <tr v-if="filteredRows.length === 0">
                         <td
-                            colspan="13"
+                            colspan="12"
                             style="
                                 text-align: center;
                                 padding: 32px;
                                 color: var(--text-gray);
                             "
                         >
-                            {{
-                                rawRows.length === 0
-                                    ? 'กดปุ่ม "ดึงข้อมูล" เพื่อแสดงรายการ'
-                                    : "ไม่มีข้อมูลตามตัวกรองที่เลือก"
-                            }}
+                            Belum ada data untuk tanggal ini. Klik "Tambah Data"
+                            untuk mulai input manual.
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Stats bar -->
         <div
             class="flex items-center gap-12"
             style="font-size: 12px; color: var(--text-muted); flex-shrink: 0"
         >
-            <span>พบ {{ rawRows.length }} รายการ</span>
+            <span>Data tampil: {{ filteredRows.length }}</span>
             <span>|</span>
-            <span>บันทึกแล้ว {{ lockedCount }} รายการ</span>
+            <span>Total pendapatan: {{ totalRevenue.toFixed(2) }}</span>
             <span>|</span>
-            <span>เลือกแล้ว {{ selectedVns.length }} รายการ</span>
+            <span>Total insentif: {{ totalPayout.toFixed(2) }}</span>
         </div>
-        <!-- Loading overlay -->
-        <div
-            v-if="loading"
-            class="loading-overlay"
-            role="status"
-            aria-live="polite"
-        >
-            <div class="loading-box">
+    </div>
+
+    <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+        <div class="modal" style="width: 880px; max-width: 96vw">
+            <div class="modal__header">
+                <span class="modal__title">
+                    {{ editing ? "Ubah Data" : "Tambah Data" }}
+                </span>
+                <button class="modal__close" @click="closeForm">x</button>
+            </div>
+
+            <div class="modal__body">
                 <div
-                    class="spinner"
-                    style="width: 28px; height: 28px; border-width: 3px"
-                ></div>
-                <div style="margin-left: 12px; font-weight: 600">
-                    กำลังดึงข้อมูล...
+                    class="form-grid"
+                    style="
+                        grid-template-columns: 160px minmax(0, 1fr) 160px minmax(0, 1fr);
+                    "
+                >
+                    <label>Tanggal kunjungan :</label>
+                    <CalendarPicker v-model="form.visit_date" />
+
+                    <label>VN lokal :</label>
+                    <input
+                        :value="form.vn || '(akan dibuat otomatis)'"
+                        type="text"
+                        readonly
+                    />
+
+                    <label>HN :</label>
+                    <input
+                        v-model="form.hn"
+                        type="text"
+                        placeholder="Nomor HN"
+                    />
+
+                    <label>NIK / CID :</label>
+                    <input
+                        v-model="form.cid"
+                        type="text"
+                        placeholder="Nomor identitas"
+                    />
+
+                    <label>Nama depan :</label>
+                    <input
+                        v-model="form.first_name"
+                        type="text"
+                        placeholder="Nama depan"
+                    />
+
+                    <label>Nama belakang :</label>
+                    <input
+                        v-model="form.last_name"
+                        type="text"
+                        placeholder="Nama belakang"
+                    />
+
+                    <label>Gender :</label>
+                    <select v-model="form.gender">
+                        <option value="">Pilih</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+
+                    <label>Usia :</label>
+                    <input
+                        v-model="form.age"
+                        type="number"
+                        min="0"
+                        placeholder="Opsional"
+                    />
+
+                    <label>Hak :</label>
+                    <input
+                        v-model="form.rights"
+                        list="rights-options"
+                        type="text"
+                        placeholder="Mis. UHC"
+                    />
+
+                    <label>Terapis :</label>
+                    <input
+                        v-model="form.therapist"
+                        list="therapist-options"
+                        type="text"
+                        placeholder="Nama terapis"
+                    />
+
+                    <label style="align-self: start; padding-top: 6px">
+                        Keluhan :
+                    </label>
+                    <textarea
+                        v-model="form.symptoms"
+                        rows="3"
+                        placeholder="Keluhan utama pasien"
+                    />
+
+                    <label>Tindakan :</label>
+                    <input
+                        v-model="form.procedure"
+                        list="procedure-options"
+                        placeholder="Pisahkan dengan koma jika lebih dari satu"
+                    />
+
+                    <label>Total pendapatan :</label>
+                    <input
+                        v-model="form.total_revenue"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                    />
+
+                    <label>Preset insentif :</label>
+                    <select
+                        v-model="selectedPayoutPreset"
+                        @change="applyPayoutPreset"
+                    >
+                        <option value="">Pilih preset</option>
+                        <option
+                            v-for="option in payoutOptions"
+                            :key="option.id"
+                            :value="String(option.amount)"
+                        >
+                            {{ option.label }} ({{ option.amount.toFixed(2) }})
+                        </option>
+                    </select>
+
+                    <label>Nilai insentif :</label>
+                    <input
+                        v-model="form.payout_amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                    />
                 </div>
+
+                <p class="text-sm text-gray mt-12">
+                    Hak, tindakan, dan terapis bisa diketik manual. Master data
+                    hanya berfungsi sebagai saran pengisian.
+                </p>
+
+                <div
+                    v-if="formError"
+                    class="alert alert-error mt-12"
+                    style="margin-bottom: 0"
+                >
+                    {{ formError }}
+                </div>
+            </div>
+
+            <div class="modal__footer">
+                <button class="btn btn-secondary" @click="closeForm">
+                    Batal
+                </button>
+                <button class="btn btn-primary" @click="saveForm">
+                    {{ editing ? "Simpan Perubahan" : "Simpan Data" }}
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Multi-provider warning popup (auto-show) -->
-    <div
-        v-if="showMultiWarning"
-        class="modal-overlay"
-        @click.self="showMultiWarning = false"
-    >
-        <div class="modal" style="width: 480px">
-            <div class="modal__header">
-                <span class="modal__title">⚠️ พบผู้ให้บริการมากกว่า 1 คน</span>
-                <button class="modal__close" @click="showMultiWarning = false">
-                    ✕
-                </button>
-            </div>
-            <div class="modal__body">
-                <p style="margin-bottom: 12px">
-                    พบ VN ต่อไปนี้มีผู้ให้บริการมากกว่า 1 คน
-                    กรุณาตรวจสอบข้อมูลใน HOSxP :
-                </p>
-                <ul style="padding-left: 20px; line-height: 1.8">
-                    <li
-                        v-for="vn in multiProviderVns"
-                        :key="vn"
-                        class="text-sm"
-                    >
-                        {{ vn }}
-                    </li>
-                </ul>
-                <p class="alert alert-warning" style="margin-top: 12px">
-                    แถวเหล่านี้จะไม่สามารถบันทึกค่าตอบแทนได้
-                    จนกว่าจะแก้ไขข้อมูลใน HOSxP
-                </p>
-            </div>
-            <div class="modal__footer">
-                <button
-                    class="btn btn-primary"
-                    @click="showMultiWarning = false"
-                >
-                    รับทราบ
-                </button>
-            </div>
-        </div>
-    </div>
+    <datalist id="rights-options">
+        <option
+            v-for="option in rightsOptions"
+            :key="option.value"
+            :value="option.value"
+        >
+            {{ option.label }}
+        </option>
+    </datalist>
+
+    <datalist id="therapist-options">
+        <option
+            v-for="option in therapistOptions"
+            :key="option.value"
+            :value="option.value"
+        >
+            {{ option.label }}
+        </option>
+    </datalist>
+
+    <datalist id="procedure-options">
+        <option
+            v-for="option in procedureOptions"
+            :key="option.key"
+            :value="option.value"
+        >
+            {{ option.label }}
+        </option>
+    </datalist>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useAppStore } from "@/stores/app";
 import * as cmd from "@/composables/useCommands";
 import type {
-    PatientRow,
+    DrugConfig,
     PayoutOption,
+    PendingRow,
+    ProcedureConfig,
     ProviderConfig,
     PttypeConfig,
-    ProcedureConfig,
-    DrugConfig,
+    UpsertPendingInput,
 } from "@/types";
 import { useToast } from "@/composables/useToast";
 import CalendarPicker from "@/components/controls/CalendarPicker.vue";
 
+type PendingFormState = {
+    id: number | null;
+    original_visit_date: string;
+    vn: string;
+    visit_date: string;
+    hn: string;
+    cid: string;
+    first_name: string;
+    last_name: string;
+    gender: string;
+    age: string;
+    rights: string;
+    symptoms: string;
+    procedure: string;
+    therapist: string;
+    total_revenue: string;
+    payout_amount: string;
+};
+
 const store = useAppStore();
-const emit = defineEmits<{ "pending-changed": [] }>();
 const { show: showToast } = useToast();
 
-// ── State ──────────────────────────────────────────────────────────────
 const selectedDate = ref(todayStr());
 const selectedProvider = ref("");
-const rawRows = ref<PatientRow[]>([]);
-const lockedVns = ref<Set<string>>(new Set());
-const selectedVns = ref<string[]>([]);
+const rows = ref<PendingRow[]>([]);
 const payoutOptions = ref<PayoutOption[]>([]);
 const providers = ref<ProviderConfig[]>([]);
 const pttypes = ref<PttypeConfig[]>([]);
 const procedures = ref<ProcedureConfig[]>([]);
 const drugs = ref<DrugConfig[]>([]);
-const loading = ref(false);
 const error = ref("");
-const showMultiWarning = ref(false);
-const multiProviderVns = ref<string[]>([]);
 
-// ── Computed ───────────────────────────────────────────────────────────
+const showForm = ref(false);
+const editing = ref(false);
+const form = ref<PendingFormState>(createEmptyForm(selectedDate.value));
+const selectedPayoutPreset = ref("");
+const formError = ref("");
+
 const filteredRows = computed(() => {
-    if (!selectedProvider.value) return rawRows.value;
-    return rawRows.value.filter((r) =>
-        r.provider_names.includes(selectedProvider.value),
+    if (!selectedProvider.value) return rows.value;
+
+    return rows.value.filter((row) =>
+        row.therapist
+            .split(",")
+            .map((name) => name.trim())
+            .includes(selectedProvider.value),
     );
 });
 
-const lockedCount = computed(
-    () => rawRows.value.filter((r) => r._locked).length,
+const totalRevenue = computed(() =>
+    filteredRows.value.reduce((sum, row) => sum + row.total_revenue, 0),
 );
-const hasSelection = computed(() => selectedVns.value.length > 0);
+const totalPayout = computed(() =>
+    filteredRows.value.reduce((sum, row) => sum + row.payout_amount, 0),
+);
 
-// ── Lifecycle ──────────────────────────────────────────────────────────
-onMounted(async () => {
-    await loadSettings();
+const providerFilterOptions = computed(() => {
+    const map = new Map<string, string>();
+
+    for (const row of rows.value) {
+        for (const name of row.therapist
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)) {
+            map.set(name, resolveProviderLabel(name));
+        }
+    }
+
+    return [...map.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([value, label]) => ({ value, label }));
 });
 
-// Refresh when pending data changes (from PendingExportTab deletion)
+const rightsOptions = computed(() =>
+    pttypes.value.map((item) => ({
+        value: item.short_name || item.name,
+        label: item.name,
+    })),
+);
+
+const therapistOptions = computed(() =>
+    providers.value.map((item) => ({
+        value: item.short_name || item.full_name,
+        label: item.full_name,
+    })),
+);
+
+const procedureOptions = computed(() => {
+    const items = [
+        ...procedures.value.map((item) => ({
+            key: `procedure-${item.id}`,
+            value: item.short_name || item.name,
+            label: item.name,
+        })),
+        ...drugs.value.map((item) => ({
+            key: `drug-${item.id}`,
+            value: item.short_name || item.name,
+            label: item.name,
+        })),
+    ];
+
+    return items.sort((a, b) => a.value.localeCompare(b.value));
+});
+
+onMounted(async () => {
+    await Promise.all([loadLookups(), loadRows()]);
+});
+
+watch(selectedDate, async () => {
+    await loadRows();
+});
+
 watch(
     () => store.pendingRefreshKey,
-    () => {
-        if (selectedDate.value) refreshLocks();
+    async () => {
+        await loadRows();
     },
 );
 
-// ── Methods ────────────────────────────────────────────────────────────
 function todayStr() {
     return new Date().toISOString().slice(0, 10);
 }
 
-async function loadSettings() {
-    try {
-        payoutOptions.value = await cmd.getPayoutOptions();
-        providers.value = await cmd.getAllProviders();
-        pttypes.value = await cmd.getAllPttypes();
-        procedures.value = await cmd.getAllProcedures();
-        drugs.value = await cmd.getAllDrugs();
-    } catch (e: any) {
-        console.error("loadSettings:", e);
+function createEmptyForm(date: string): PendingFormState {
+    return {
+        id: null,
+        original_visit_date: date,
+        vn: "",
+        visit_date: date,
+        hn: "",
+        cid: "",
+        first_name: "",
+        last_name: "",
+        gender: "",
+        age: "",
+        rights: "",
+        symptoms: "",
+        procedure: "",
+        therapist: "",
+        total_revenue: "",
+        payout_amount: "",
+    };
+}
+
+function buildLocalVn() {
+    const time = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `OFFLINE-${time}-${random}`;
+}
+
+function fullName(row: PendingRow) {
+    return [row.first_name, row.last_name].filter(Boolean).join(" ");
+}
+
+function resolveProviderLabel(value: string) {
+    const matched = providers.value.find(
+        (item) =>
+            item.short_name === value ||
+            item.full_name === value ||
+            String(item.health_med_provider_id) === value,
+    );
+    return matched?.short_name || matched?.full_name || value;
+}
+
+async function loadLookups() {
+    const results = await Promise.allSettled([
+        cmd.getPayoutOptions(),
+        cmd.getAllProviders(),
+        cmd.getAllPttypes(),
+        cmd.getAllProcedures(),
+        cmd.getAllDrugs(),
+    ]);
+
+    if (results[0].status === "fulfilled") {
+        payoutOptions.value = results[0].value;
+    }
+    if (results[1].status === "fulfilled") {
+        providers.value = results[1].value;
+    }
+    if (results[2].status === "fulfilled") {
+        pttypes.value = results[2].value;
+    }
+    if (results[3].status === "fulfilled") {
+        procedures.value = results[3].value;
+    }
+    if (results[4].status === "fulfilled") {
+        drugs.value = results[4].value;
     }
 }
 
-async function loadData() {
-    if (!store.isConnected) {
-        error.value = "ยังไม่ได้เชื่อมต่อ HOSxP กรุณาตั้งค่าการเชื่อมต่อก่อน";
-        return;
-    }
+async function loadRows() {
     error.value = "";
-    loading.value = true;
-    selectedVns.value = [];
 
     try {
-        // Reload settings in case they changed
-        await loadSettings();
-
-        const [rows, locked] = await Promise.all([
-            cmd.fetchPatientData(selectedDate.value),
-            cmd.getLockedVns(selectedDate.value),
-        ]);
-
-        lockedVns.value = new Set(locked);
-
-        // Annotate rows
-        const annotated: PatientRow[] = rows.map((r) => {
-            const providerCount = (r.provider_names || "")
-                .split(", ")
-                .filter((p) => p && p !== "PROVIDER_ID_NOT_DEFINED").length;
-            return {
-                ...r,
-                _locked: lockedVns.value.has(r.vn),
-                _multi_provider: providerCount > 1,
-                _selected_payout: null,
-            };
-        });
-
-        rawRows.value = annotated;
-
-        // Check for multi-provider VNs
-        const multiVns = annotated
-            .filter((r) => r._multi_provider)
-            .map((r) => r.vn);
-        if (multiVns.length > 0) {
-            multiProviderVns.value = multiVns;
-            showMultiWarning.value = true;
-        }
-    } catch (e: any) {
-        error.value = String(e);
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function refreshLocks() {
-    try {
-        const locked = await cmd.getLockedVns(selectedDate.value);
-        lockedVns.value = new Set(locked);
-        rawRows.value = rawRows.value.map((r) => ({
-            ...r,
-            _locked: lockedVns.value.has(r.vn),
-        }));
-        // Deselect any newly locked VNs
-        selectedVns.value = selectedVns.value.filter(
-            (vn) => !lockedVns.value.has(vn),
+        rows.value = await cmd.getPendingExport(
+            selectedDate.value,
+            selectedDate.value,
         );
-    } catch (e) {
-        console.error("refreshLocks:", e);
+    } catch (err: any) {
+        error.value = String(err);
     }
 }
 
-async function saveSelected() {
-    if (selectedVns.value.length === 0) return;
-    error.value = "";
+async function openCreate() {
+    await loadLookups();
+    editing.value = false;
+    selectedPayoutPreset.value = "";
+    formError.value = "";
+    form.value = createEmptyForm(selectedDate.value);
+    showForm.value = true;
+}
 
-    const rowsToSave = rawRows.value.filter(
-        (r) => selectedVns.value.includes(r.vn) && r._selected_payout != null,
-    );
+async function openEdit(row: PendingRow) {
+    await loadLookups();
+    editing.value = true;
+    formError.value = "";
+    form.value = {
+        id: row.id,
+        original_visit_date: row.visit_date,
+        vn: row.vn,
+        visit_date: row.visit_date,
+        hn: row.hn,
+        cid: row.cid,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        gender: row.gender,
+        age: row.age == null ? "" : String(row.age),
+        rights: row.rights,
+        symptoms: row.symptoms,
+        procedure: row.procedure,
+        therapist: row.therapist,
+        total_revenue: String(row.total_revenue),
+        payout_amount: String(row.payout_amount),
+    };
+    selectedPayoutPreset.value = payoutOptions.value.some(
+        (option) => option.amount === row.payout_amount,
+    )
+        ? String(row.payout_amount)
+        : "";
+    showForm.value = true;
+}
 
-    if (rowsToSave.length === 0) {
-        error.value = "กรุณาเลือกค่าตอบแทนสำหรับทุกรายการที่ต้องการบันทึก";
+function closeForm() {
+    showForm.value = false;
+    formError.value = "";
+}
+
+function applyPayoutPreset() {
+    if (!selectedPayoutPreset.value) return;
+    form.value.payout_amount = selectedPayoutPreset.value;
+}
+
+function normalizeProcedure(value: string) {
+    return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .join(", ");
+}
+
+function parseOptionalInteger(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : NaN;
+}
+
+function parseRequiredNumber(value: string) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : NaN;
+}
+
+async function saveForm() {
+    formError.value = "";
+
+    const firstName = form.value.first_name.trim();
+    const lastName = form.value.last_name.trim();
+    const therapist = form.value.therapist.trim();
+    const rights = form.value.rights.trim();
+    const visitDate = form.value.visit_date;
+    const age = parseOptionalInteger(form.value.age);
+    const totalRevenue = parseRequiredNumber(form.value.total_revenue);
+    const payoutAmount = parseRequiredNumber(form.value.payout_amount);
+
+    if (!visitDate) {
+        formError.value = "Tanggal kunjungan wajib diisi.";
         return;
     }
 
+    if (!firstName && !lastName) {
+        formError.value = "Isi minimal nama depan atau nama belakang.";
+        return;
+    }
+
+    if (!rights) {
+        formError.value = "Hak wajib diisi.";
+        return;
+    }
+
+    if (!therapist) {
+        formError.value = "Terapis wajib diisi.";
+        return;
+    }
+
+    if (Number.isNaN(age)) {
+        formError.value = "Usia harus berupa angka bulat nol atau lebih.";
+        return;
+    }
+
+    if (Number.isNaN(totalRevenue)) {
+        formError.value = "Total pendapatan harus berupa angka nol atau lebih.";
+        return;
+    }
+
+    if (Number.isNaN(payoutAmount)) {
+        formError.value = "Nilai insentif harus berupa angka nol atau lebih.";
+        return;
+    }
+
+    const record: UpsertPendingInput = {
+        visit_date: visitDate,
+        vn: form.value.vn || buildLocalVn(),
+        hn: form.value.hn.trim(),
+        cid: form.value.cid.trim(),
+        first_name: firstName,
+        last_name: lastName,
+        gender: form.value.gender,
+        age: age === null ? null : age,
+        rights,
+        symptoms: form.value.symptoms.trim(),
+        procedure: normalizeProcedure(form.value.procedure),
+        therapist,
+        total_revenue: totalRevenue,
+        payout_amount: payoutAmount,
+    };
+
     try {
-        for (const row of rowsToSave) {
-            await cmd.upsertPending({
-                visit_date: row.service_date || selectedDate.value,
-                vn: row.vn,
-                hn: row.hn,
-                cid: row.cid,
-                first_name: row.first_name,
-                last_name: row.last_name,
-                gender: row.gender,
-                age: row.age,
-                rights: resolveRightsShort(row),
-                symptoms: row.chief_complaint,
-                procedure: resolveProcedureShort(row),
-                therapist: cleanProviderName(row.provider_names),
-                total_revenue: row.total_sum_price,
-                payout_amount: row._selected_payout!,
-            });
+        await cmd.upsertPending(record);
+
+        if (
+            editing.value &&
+            form.value.id != null &&
+            form.value.original_visit_date !== record.visit_date
+        ) {
+            await cmd.deletePendingById(form.value.id);
         }
 
-        showToast(`บันทึก ${rowsToSave.length} รายการสำเร็จ`, "success");
-        selectedVns.value = [];
-        await refreshLocks();
-        emit("pending-changed");
+        showToast(
+            editing.value
+                ? "Perubahan data berhasil disimpan."
+                : "Data berhasil ditambahkan.",
+            "success",
+        );
+        selectedDate.value = record.visit_date;
+        showForm.value = false;
+        await loadRows();
         store.triggerPendingRefresh();
-    } catch (e: any) {
-        error.value = String(e);
+    } catch (err: any) {
+        formError.value = String(err);
     }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────
-function shortPttype(row: PatientRow): string {
-    const found = pttypes.value.find(
-        (p) => p.hipdata_code === row.pttype_hipdata_code,
-    );
-    if (found?.short_name) return found.short_name;
-    return row.pttype_display_name.length > 10
-        ? row.pttype_display_name.slice(0, 10) + "…"
-        : row.pttype_display_name;
-}
+async function removeRow(id: number) {
+    if (!confirm("Hapus data ini dari penyimpanan lokal?")) return;
 
-function resolveRightsShort(row: PatientRow): string {
-    const found = pttypes.value.find(
-        (p) => p.hipdata_code === row.pttype_hipdata_code,
-    );
-    return found?.short_name || row.pttype_display_name;
-}
+    error.value = "";
 
-// Show short name for provider, full name in tooltip
-function shortProviderDisplay(names: string): string {
-    return (names || "")
-        .split(", ")
-        .map((name) => {
-            if (!name || name === "PROVIDER_ID_NOT_DEFINED") return null;
-            const found = providers.value.find((p) => p.full_name === name);
-            return found?.short_name || name;
-        })
-        .filter((n): n is string => n !== null)
-        .join(", ");
-}
-
-// Show short name for procedures/drugs by icode, full item_names in tooltip
-function shortProcedureDisplay(row: PatientRow): string {
-    const icodes = (row.all_icodes || "").split(", ").filter(Boolean);
-    if (icodes.length === 0) return row.item_names;
-
-    // Group display names: procedures first, then drugs
-    const procNames: string[] = [];
-    const drugNames: string[] = [];
-    for (const icode of icodes) {
-        const proc = procedures.value.find((p) => p.icode === icode);
-        if (proc?.short_name) {
-            procNames.push(proc.short_name);
-            continue;
-        }
-        const drug = drugs.value.find((d) => d.icode === icode);
-        if (drug?.short_name) {
-            drugNames.push(drug.short_name);
-            continue;
-        }
-        // If not found in either list, keep the raw code in the procedure group so it appears before drugs
-        procNames.push(icode);
+    try {
+        await cmd.deletePendingById(id);
+        showToast("Data berhasil dihapus.", "success");
+        await loadRows();
+        store.triggerPendingRefresh();
+    } catch (err: any) {
+        error.value = String(err);
     }
-
-    return [...procNames, ...drugNames].join(", ");
-}
-
-function resolveProcedureShort(row: PatientRow): string {
-    return row.item_names;
-}
-
-function cleanProviderName(names: string): string {
-    return (names || "")
-        .split(", ")
-        .filter((n) => n && n !== "PROVIDER_ID_NOT_DEFINED")
-        .join(", ");
 }
 </script>
 
 <style scoped>
-.payout-select {
-    height: 26px;
-    border-radius: 3px;
-}
-
-/* Loading overlay shown while fetching data */
-.loading-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    pointer-events: all;
-}
-
-/* Box inside the overlay */
-.loading-box {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--bg-surface);
-    padding: 12px 16px;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    font-family: var(--font);
-    color: var(--text-primary);
-}
-
-/* Ensure the spinner uses the project's spinner styles (defined in theme.css) */
-.loading-box .spinner {
-    width: 28px;
-    height: 28px;
-    border-width: 3px;
+.data-table td[title] {
+    cursor: help;
+    text-decoration: underline dotted rgba(0, 0, 0, 0.15);
+    text-underline-offset: 2px;
 }
 </style>

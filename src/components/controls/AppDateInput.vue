@@ -5,7 +5,7 @@
             v-model="selectedMonth"
             @change="onMonthChange"
         >
-            <option v-for="(m, i) in thaiMonths" :key="i" :value="i + 1">
+            <option v-for="(m, i) in monthNames" :key="i" :value="i + 1">
                 {{ m }}
             </option>
         </select>
@@ -15,7 +15,7 @@
             @change="onYearChange"
         >
             <option v-for="y in yearList" :key="y" :value="y">
-                {{ y + 543 }}
+                {{ y }}
             </option>
         </select>
         <input
@@ -33,19 +33,19 @@ import { ref, watch, computed } from "vue";
 const props = defineProps<{ modelValue: string }>();
 const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
 
-const thaiMonths = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
+const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
 ];
 
 const currentYear = new Date().getFullYear();

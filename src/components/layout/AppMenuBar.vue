@@ -1,6 +1,5 @@
 <template>
     <nav class="menu-bar">
-        <!-- App title -->
         <span class="menu-bar__logo">
             <svg
                 width="20"
@@ -75,83 +74,51 @@
                     r="3"
                     fill="white"
                     fill-opacity="0.4"
-                /></svg
-            >PayPerCase
+                />
+            </svg>
+            PayPerCase
         </span>
 
-        <!-- Menu: การเชื่อมต่อ -->
-        <div
-            class="menu-bar__item"
-            :class="{ active: openMenu === 'conn' }"
-            @click="toggleMenu('conn')"
-        >
-            การเชื่อมต่อ
-            <div v-if="openMenu === 'conn'" class="dropdown-menu">
-                <div
-                    class="dropdown-menu__item"
-                    @click.stop="closeAndEmit('open-connection')"
-                >
-                    ตั้งค่าการเชื่อมต่อ HOSxP
-                </div>
-                <div class="dropdown-menu__separator" />
-                <div
-                    class="dropdown-menu__item"
-                    @click.stop="closeAndEmit('reconnect')"
-                >
-                    เชื่อมต่อใหม่
-                </div>
-                <div
-                    class="dropdown-menu__item"
-                    @click.stop="closeAndEmit('disconnect')"
-                >
-                    ตัดการเชื่อมต่อ
-                </div>
-            </div>
-        </div>
-
-        <!-- Menu: การตั้งค่า -->
         <div
             class="menu-bar__item"
             :class="{ active: openMenu === 'settings' }"
             @click="toggleMenu('settings')"
         >
-            การตั้งค่า
+            Pengaturan
             <div v-if="openMenu === 'settings'" class="dropdown-menu">
                 <div
                     class="dropdown-menu__item"
                     @click.stop="closeAndEmit('open-settings')"
                 >
-                    ตั้งค่าระบบ
+                    Master Data
                 </div>
             </div>
         </div>
 
-        <!-- Menu: เกี่ยวกับ -->
         <div
             class="menu-bar__item"
             :class="{ active: openMenu === 'about' }"
             @click="toggleMenu('about')"
         >
-            เกี่ยวกับ
+            Tentang
             <div v-if="openMenu === 'about'" class="dropdown-menu">
                 <div
                     class="dropdown-menu__item"
-                    @click.stop="closeAndEmit('show-safety')"
+                    @click.stop="closeAndEmit('show-storage')"
                 >
-                    นโยบายความปลอดภัย HOSxP
+                    Penyimpanan Lokal
                 </div>
                 <div class="dropdown-menu__item" @click.stop="openDisclaimer">
-                    ข้อจำกัดความรับผิดชอบ
+                    Penafian
                 </div>
                 <div class="dropdown-menu__separator" />
-                <div class="dropdown-menu__item" @click.stop="closeMenu">
-                    <span>PayPerCase</span>
+                <div class="dropdown-menu__item" @click.stop="closeAndEmit('exit')">
+                    Keluar
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Disclaimer Modal -->
     <div
         v-if="showDisclaimer"
         class="modal-backdrop"
@@ -161,37 +128,29 @@
             class="modal"
             role="dialog"
             aria-modal="true"
-            aria-label="ข้อจำกัดความรับผิดชอบ"
+            aria-label="Penafian"
         >
-            <header class="modal__header">ข้อจำกัดความรับผิดชอบ</header>
+            <header class="modal__header">Penafian</header>
             <div class="modal__body">
-                ผู้พัฒนาไม่รับผิดชอบต่อความเสียหายหรือการสูญเสียใด ๆ
-                ที่อาจเกิดขึ้นจากการใช้งานซอฟต์แวร์นี้
+                Pengembang tidak bertanggung jawab atas kerusakan atau
+                kehilangan data akibat penggunaan perangkat lunak ini tanpa
+                prosedur backup yang memadai.
             </div>
             <footer class="modal__footer">
-                <button class="btn" @click="closeDisclaimer">ปิด</button>
+                <button class="btn" @click="closeDisclaimer">Tutup</button>
             </footer>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 
-type MenuEmitEvent =
-    | "open-connection"
-    | "open-settings"
-    | "show-safety"
-    | "reconnect"
-    | "disconnect"
-    | "exit";
+type MenuEmitEvent = "open-settings" | "show-storage" | "exit";
 
 const emit = defineEmits<{
-    "open-connection": [];
     "open-settings": [];
-    "show-safety": [];
-    reconnect: [];
-    disconnect: [];
+    "show-storage": [];
     exit: [];
 }>();
 
@@ -209,20 +168,11 @@ function closeMenu() {
 function closeAndEmit(event: MenuEmitEvent) {
     closeMenu();
     switch (event) {
-        case "open-connection":
-            emit("open-connection");
-            break;
         case "open-settings":
             emit("open-settings");
             break;
-        case "show-safety":
-            emit("show-safety");
-            break;
-        case "reconnect":
-            emit("reconnect");
-            break;
-        case "disconnect":
-            emit("disconnect");
+        case "show-storage":
+            emit("show-storage");
             break;
         case "exit":
             emit("exit");
@@ -258,14 +208,7 @@ onUnmounted(() => document.removeEventListener("click", onClickOutside));
     padding: 4px 12px;
     user-select: none;
 }
-.dropdown-menu__shortcut {
-    margin-left: auto;
-    font-size: 10px;
-    color: var(--text-gray);
-    padding-left: 16px;
-}
 
-/* Disclaimer modal */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -275,6 +218,7 @@ onUnmounted(() => document.removeEventListener("click", onClickOutside));
     justify-content: center;
     z-index: 1000;
 }
+
 .modal {
     background: var(--bg-surface, #fff);
     padding: 16px;
@@ -283,18 +227,22 @@ onUnmounted(() => document.removeEventListener("click", onClickOutside));
     max-width: calc(100% - 40px);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
 }
+
 .modal__header {
     font-weight: 600;
     margin-bottom: 8px;
 }
+
 .modal__body {
     font-size: 14px;
     color: var(--text, #333);
     margin-bottom: 12px;
 }
+
 .modal__footer {
     text-align: right;
 }
+
 .btn {
     background: var(--primary, #3f51b5);
     color: #fff;

@@ -1,132 +1,238 @@
 <template>
-  <div>
-    <!-- Search group -->
-    <div class="group-box mb-12">
-      <span class="group-box__title">ค้นหาสิทธิการรักษาใน HOSxP</span>
-      <div style="padding-top:12px">
-        <div class="flex items-center gap-8 mb-8">
-          <label>hipdata_code :</label>
-          <input type="text" v-model="searchInput" placeholder="เช่น UCS, OFC, LGO" style="width:180px"
-            @keydown.enter="search" />
-          <button class="btn btn-secondary" :disabled="searching" @click="search">
-            <span v-if="searching" class="spinner" style="width:12px;height:12px;border-width:2px" />
-            🔍 ค้นหาใน HOSxP
-          </button>
+    <div>
+        <div class="group-box mb-12">
+            <span class="group-box__title">Tambah Hak Perawatan</span>
+            <div style="padding-top: 12px">
+                <div
+                    class="form-grid"
+                    style="
+                        max-width: 860px;
+                        grid-template-columns: 160px minmax(0, 1fr) 160px minmax(0, 1fr);
+                    "
+                >
+                    <label>Kode internal :</label>
+                    <input
+                        v-model="form.pttype"
+                        type="text"
+                        placeholder="Opsional, akan dibuat otomatis bila kosong"
+                    />
+
+                    <label>Nama singkat :</label>
+                    <input
+                        v-model="form.short_name"
+                        type="text"
+                        placeholder="Mis. UHC"
+                    />
+
+                    <label>Nama tampilan :</label>
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        placeholder="Mis. Universal Health Coverage"
+                    />
+
+                    <label>Kode hipdata :</label>
+                    <input
+                        v-model="form.hipdata_code"
+                        type="text"
+                        placeholder="Opsional"
+                    />
+
+                    <label>Kode pcode :</label>
+                    <input
+                        v-model="form.pcode"
+                        type="text"
+                        placeholder="Opsional"
+                    />
+                </div>
+
+                <p class="text-sm text-gray mt-8">
+                    Kolom kode bisa dikosongkan. Aplikasi tetap dapat memakai
+                    nama singkat sebagai referensi lokal.
+                </p>
+
+                <div class="flex gap-8 mt-12">
+                    <button class="btn btn-primary" @click="save">
+                        Simpan Hak Perawatan
+                    </button>
+                    <button class="btn btn-ghost" @click="clearForm">
+                        Reset
+                    </button>
+                </div>
+
+                <div
+                    v-if="msg"
+                    class="alert mt-8"
+                    :class="msgOk ? 'alert-success' : 'alert-error'"
+                >
+                    {{ msg }}
+                </div>
+            </div>
         </div>
 
-        <div v-if="lookupResult" class="form-grid" style="max-width:460px;margin-bottom:10px">
-          <label>hipdata_code :</label>
-          <input type="text" :value="lookupResult.hipdata_code" readonly />
-          <label>ชื่อย่อ :</label>
-          <input type="text" v-model="shortName" placeholder="ชื่อย่อสำหรับแสดงในโปรแกรม" style="width:220px" />
+        <div class="group-box">
+            <span class="group-box__title">Hak Perawatan Tersimpan</span>
+            <div style="padding-top: 10px">
+                <div class="table-wrapper" style="max-height: 340px">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px">#</th>
+                                <th style="width: 140px">Kode internal</th>
+                                <th>Nama tampilan</th>
+                                <th style="width: 120px">Nama singkat</th>
+                                <th style="width: 140px">Kode hipdata</th>
+                                <th style="width: 120px">Pcode</th>
+                                <th style="width: 60px">Hapus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in list" :key="item.id">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ item.pttype }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.short_name }}</td>
+                                <td>{{ item.hipdata_code }}</td>
+                                <td>{{ item.pcode }}</td>
+                                <td>
+                                    <button
+                                        class="btn btn-danger btn-sm"
+                                        @click="remove(item.id)"
+                                    >
+                                        Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr v-if="list.length === 0">
+                                <td
+                                    colspan="7"
+                                    style="
+                                        text-align: center;
+                                        color: var(--text-gray);
+                                        padding: 20px;
+                                    "
+                                >
+                                    Belum ada data.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        <div v-if="lookupResult" class="flex gap-8">
-          <button class="btn btn-primary" @click="save">💾 บันทึกสิทธิการรักษา</button>
-        </div>
-
-        <div v-if="msg" class="alert mt-8" :class="msgOk ? 'alert-success' : 'alert-error'">{{ msg }}</div>
-        <div v-if="notFound" class="alert alert-warning mt-8">ไม่พบ hipdata_code "{{ searchInput }}" ใน HOSxP</div>
-      </div>
     </div>
-
-    <!-- Saved list -->
-    <div class="group-box">
-      <span class="group-box__title">สิทธิการรักษาที่บันทึกแล้ว</span>
-      <div style="padding-top:10px">
-        <div class="flex items-center gap-8 mb-8">
-          <label style="font-size:12px">แสดงเฉพาะ hipdata_code :</label>
-          <select v-model="filterCode" style="width:180px;font-size:12px">
-            <option value="">ทั้งหมด</option>
-            <option v-for="c in uniqueCodes" :key="c" :value="c">{{ c }}</option>
-          </select>
-        </div>
-        <div class="table-wrapper" style="max-height:260px">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width:40px">#</th>
-                <th>hipdata_code</th>
-                <th>ชื่อย่อ</th>
-                <th style="width:60px">ลบ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(r, i) in filteredList" :key="r.id">
-                <td>{{ i+1 }}</td>
-                <td>{{ r.hipdata_code }}</td>
-                <td>{{ r.short_name }}</td>
-                <td><button class="btn btn-danger btn-sm" @click="del(r.id)">🗑️</button></td>
-              </tr>
-              <tr v-if="filteredList.length === 0">
-                <td colspan="4" style="text-align:center;color:var(--text-gray);padding:20px">ยังไม่มีข้อมูล</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import * as cmd from '@/composables/useCommands'
-import type { PttypeConfig, PttypeLookup } from '@/types'
+import { onMounted, ref } from "vue";
+import * as cmd from "@/composables/useCommands";
+import type { PttypeConfig } from "@/types";
 
-const searchInput = ref('')
-const shortName = ref('')
-const lookupResult = ref<PttypeLookup | null>(null)
-const list = ref<PttypeConfig[]>([])
-const filterCode = ref('')
-const searching = ref(false)
-const notFound = ref(false)
-const msg = ref(''); const msgOk = ref(true)
+type PttypeForm = {
+    pttype: string;
+    name: string;
+    pcode: string;
+    hipdata_code: string;
+    short_name: string;
+};
 
-const uniqueCodes = computed(() => [...new Set(list.value.map(r => r.hipdata_code))])
-const filteredList = computed(() =>
-  filterCode.value ? list.value.filter(r => r.hipdata_code === filterCode.value) : list.value
-)
+const list = ref<PttypeConfig[]>([]);
+const form = ref<PttypeForm>(createEmptyForm());
+const msg = ref("");
+const msgOk = ref(true);
 
-onMounted(load)
+onMounted(load);
 
-async function load() {
-  try { list.value = await cmd.getAllPttypes() } catch {}
+function createEmptyForm(): PttypeForm {
+    return {
+        pttype: "",
+        name: "",
+        pcode: "",
+        hipdata_code: "",
+        short_name: "",
+    };
 }
 
-async function search() {
-  notFound.value = false; lookupResult.value = null; msg.value = ''
-  if (!searchInput.value.trim()) return
-  searching.value = true
-  try {
-    const r = await cmd.lookupPttype(searchInput.value.trim())
-    if (r) { lookupResult.value = r; shortName.value = '' }
-    else notFound.value = true
-  } catch (e: any) { msg.value = String(e); msgOk.value = false }
-  finally { searching.value = false }
+function resetForm(clearMessage = true) {
+    form.value = createEmptyForm();
+    if (clearMessage) {
+        msg.value = "";
+    }
+}
+
+function clearForm() {
+    resetForm(true);
+}
+
+function normalizeToken(value: string) {
+    return value.trim().replace(/\s+/g, "_").toUpperCase();
+}
+
+async function load() {
+    try {
+        list.value = await cmd.getAllPttypes();
+    } catch {}
 }
 
 async function save() {
-  if (!lookupResult.value) return
-  msg.value = ''
-  try {
-    await cmd.savePttype(
-      lookupResult.value.pttype,
-      lookupResult.value.name,
-      lookupResult.value.pcode,
-      lookupResult.value.hipdata_code,
-      shortName.value.trim(),
-    )
-    msg.value = `บันทึกสิทธิ "${lookupResult.value.hipdata_code}" สำเร็จ`
-    msgOk.value = true
-    lookupResult.value = null; searchInput.value = ''; shortName.value = ''
-    await load()
-  } catch (e: any) { msg.value = String(e); msgOk.value = false }
+    msg.value = "";
+
+    const name = form.value.name.trim();
+    const shortName = form.value.short_name.trim();
+    const pttype = form.value.pttype.trim() || normalizeToken(shortName);
+    const hipdataCode =
+        form.value.hipdata_code.trim() || normalizeToken(shortName);
+    const pcode = form.value.pcode.trim();
+
+    if (!name) {
+        msg.value = "Nama tampilan wajib diisi.";
+        msgOk.value = false;
+        return;
+    }
+
+    if (!shortName) {
+        msg.value = "Nama singkat wajib diisi.";
+        msgOk.value = false;
+        return;
+    }
+
+    const duplicate = list.value.find(
+        (item) =>
+            item.short_name.toLowerCase() === shortName.toLowerCase() ||
+            item.pttype.toLowerCase() === pttype.toLowerCase() ||
+            item.hipdata_code.toLowerCase() === hipdataCode.toLowerCase(),
+    );
+
+    if (duplicate) {
+        msg.value =
+            "Hak perawatan dengan nama singkat atau kode yang sama sudah ada.";
+        msgOk.value = false;
+        return;
+    }
+
+    try {
+        await cmd.savePttype(pttype, name, pcode, hipdataCode, shortName);
+        msg.value = `Hak perawatan "${shortName}" berhasil disimpan.`;
+        msgOk.value = true;
+        resetForm(false);
+        await load();
+    } catch (error: any) {
+        msg.value = String(error);
+        msgOk.value = false;
+    }
 }
 
-async function del(id: number) {
-  if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return
-  try { await cmd.deletePttype(id); await load() }
-  catch (e: any) { msg.value = String(e); msgOk.value = false }
+async function remove(id: number) {
+    if (!confirm("Hapus hak perawatan ini?")) return;
+
+    try {
+        await cmd.deletePttype(id);
+        await load();
+        msg.value = "Hak perawatan berhasil dihapus.";
+        msgOk.value = true;
+    } catch (error: any) {
+        msg.value = String(error);
+        msgOk.value = false;
+    }
 }
 </script>

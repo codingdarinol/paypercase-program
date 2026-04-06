@@ -49,20 +49,20 @@ pub fn export_pending_csv(
     let rows = local::get_pending_export(&db, &date_from, &date_to).map_err(|e| e.to_string())?;
 
     if rows.is_empty() {
-        return Err("ไม่มีข้อมูลในช่วงวันที่ที่เลือก".to_string());
+        return Err("Tidak ada data pada rentang tanggal yang dipilih.".to_string());
     }
 
     let mut file =
-        std::fs::File::create(&file_path).map_err(|e| format!("ไม่สามารถสร้างไฟล์: {}", e))?;
+        std::fs::File::create(&file_path).map_err(|e| format!("Tidak dapat membuat file: {}", e))?;
 
     // Write UTF-8 BOM for Excel compatibility
     file.write_all(&[0xEF, 0xBB, 0xBF])
-        .map_err(|e| format!("ไม่สามารถเขียนไฟล์: {}", e))?;
+        .map_err(|e| format!("Tidak dapat menulis file: {}", e))?;
 
     // Header row
     let header = "visit_date,hn,cid,first_name,last_name,gender,age,rights,symptoms,procedure,therapist,total_revenue,payout_amount\n";
     file.write_all(header.as_bytes())
-        .map_err(|e| format!("ไม่สามารถเขียน header: {}", e))?;
+        .map_err(|e| format!("Tidak dapat menulis header: {}", e))?;
 
     for row in &rows {
         let line = format!(
@@ -82,10 +82,10 @@ pub fn export_pending_csv(
             row.payout_amount,
         );
         file.write_all(line.as_bytes())
-            .map_err(|e| format!("ไม่สามารถเขียนข้อมูล: {}", e))?;
+            .map_err(|e| format!("Tidak dapat menulis data: {}", e))?;
     }
 
-    Ok(format!("ส่งออกสำเร็จ {} รายการ → {}", rows.len(), file_path))
+    Ok(format!("Berhasil mengekspor {} data → {}", rows.len(), file_path))
 }
 
 fn csv_escape(s: &str) -> String {

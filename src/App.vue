@@ -1,50 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useAppStore } from "@/stores/app";
 import AppMenuBar from "@/components/layout/AppMenuBar.vue";
 import AppStatusBar from "@/components/layout/AppStatusBar.vue";
 import DataViewTab from "@/components/tabs/DataViewTab.vue";
 import PendingExportTab from "@/components/tabs/PendingExportTab.vue";
 import DeleteDataTab from "@/components/tabs/DeleteDataTab.vue";
-import ConnectionDialog from "@/components/dialog/ConnectionDialog.vue";
 import SettingsDialog from "@/components/dialog/SettingsDialog.vue";
-import * as cmd from "@/composables/useCommands";
 import AppToast from "@/components/layout/AppToast.vue";
 
 const store = useAppStore();
 
-const showConnection = ref(false);
 const showSettings = ref(false);
-const showSafetyInfo = ref(false);
-
-onMounted(async () => {
-    try {
-        const result = await cmd.autoConnect();
-        if (result.ok) {
-            const settings = await cmd.getHosxpSettings().catch(() => null);
-            store.setConnected(settings?.host ?? "", result.message);
-        }
-    } catch {}
-});
+const showStorageInfo = ref(false);
 
 async function handleMenuEvent(event: string) {
-    if (event === "open-connection") showConnection.value = true;
-    else if (event === "open-settings") showSettings.value = true;
-    else if (event === "show-safety") showSafetyInfo.value = true;
-    else if (event === "reconnect") {
-        try {
-            const result = await cmd.autoConnect();
-            if (result.ok) {
-                const settings = await cmd.getHosxpSettings().catch(() => null);
-                store.setConnected(settings?.host ?? "", result.message);
-            }
-        } catch {}
-    } else if (event === "disconnect") {
-        try {
-            await cmd.disconnectHosxp();
-            store.setDisconnected();
-        } catch {}
-    } else if (event === "exit") {
+    if (event === "open-settings") {
+        showSettings.value = true;
+        return;
+    }
+
+    if (event === "show-storage") {
+        showStorageInfo.value = true;
+        return;
+    }
+
+    if (event === "exit") {
         const { exit } = await import("@tauri-apps/plugin-process");
         await exit(0);
     }
@@ -53,42 +34,36 @@ async function handleMenuEvent(event: string) {
 
 <template>
     <div class="app-layout">
-        <!-- Menu bar -->
         <AppMenuBar
-            @open-connection="handleMenuEvent('open-connection')"
             @open-settings="handleMenuEvent('open-settings')"
-            @show-safety="handleMenuEvent('show-safety')"
-            @reconnect="handleMenuEvent('reconnect')"
-            @disconnect="handleMenuEvent('disconnect')"
+            @show-storage="handleMenuEvent('show-storage')"
             @exit="handleMenuEvent('exit')"
         />
 
-        <!-- Tab bar -->
         <div class="tab-bar">
             <button
                 class="tab-btn"
                 :class="{ active: store.activeTab === 'data' }"
                 @click="store.activeTab = 'data'"
             >
-                📋 ข้อมูลผู้ป่วย
+                📝 Input Data
             </button>
             <button
                 class="tab-btn"
                 :class="{ active: store.activeTab === 'pending' }"
                 @click="store.activeTab = 'pending'"
             >
-                📤 ข้อมูลรอส่งออก
+                📤 Menunggu Ekspor
             </button>
             <button
                 class="tab-btn"
                 :class="{ active: store.activeTab === 'delete' }"
                 @click="store.activeTab = 'delete'"
             >
-                🗑️ ลบข้อมูล
+                🗑️ Hapus Data
             </button>
         </div>
 
-        <!-- Main panel — wrapper divs keep components alive so dates & filters are preserved -->
         <div class="main-panel">
             <div class="tab-pane" v-show="store.activeTab === 'data'">
                 <DataViewTab />
@@ -101,30 +76,23 @@ async function handleMenuEvent(event: string) {
             </div>
         </div>
 
-        <!-- Status bar -->
         <AppStatusBar />
 
-        <!-- Dialogs (v-if is fine — they are lightweight) -->
-        <ConnectionDialog
-            v-if="showConnection"
-            @close="showConnection = false"
-        />
         <SettingsDialog v-if="showSettings" @close="showSettings = false" />
 
-        <!-- Safety info modal -->
         <div
-            v-if="showSafetyInfo"
+            v-if="showStorageInfo"
             class="modal-overlay"
-            @click.self="showSafetyInfo = false"
+            @click.self="showStorageInfo = false"
         >
             <div class="modal" style="max-width: 620px">
                 <div class="modal__header">
                     <span class="modal__title"
-                        >🛡️ ความปลอดภัยของฐานข้อมูล HOSxP</span
+                        >🗄️ Penyimpanan Data Lokal</span
                     >
                     <button
                         class="modal__close"
-                        @click="showSafetyInfo = false"
+                        @click="showStorageInfo = false"
                     >
                         ✕
                     </button>
@@ -135,41 +103,41 @@ async function handleMenuEvent(event: string) {
                 >
                     <p>
                         <strong
-                            >โปรแกรม PayPerCase อ่านข้อมูลจาก HOSxP แบบ
-                            READ-ONLY เท่านั้น</strong
+                            >Aplikasi ini berjalan sepenuhnya dalam mode
+                            offline-first.</strong
                         >
                     </p>
                     <ul style="margin-top: 10px; padding-left: 20px">
                         <li>
-                            ไม่มีการ INSERT, UPDATE หรือ DELETE ข้อมูลใดๆ ใน
-                            HOSxP
+                            Semua data disimpan di database SQLite lokal
+                            `paypercase.db`.
                         </li>
-                        <li>ใช้เพียง SELECT เพื่อดึงข้อมูลมาแสดงผลเท่านั้น</li>
                         <li>
-                            ข้อมูลที่บันทึกทั้งหมดจะถูกเก็บในฐานข้อมูลของโปรแกรมนี้แยกต่างหาก
-                            (paypercase.db)
+                            Input data pasien dilakukan manual dari aplikasi,
+                            tanpa koneksi ke server eksternal.
                         </li>
-                        <li>ไม่กระทบต่อการทำงานของ HOSxP แต่อย่างใด</li>
+                        <li>
+                            Data tetap bisa ditinjau, diekspor ke CSV, dan
+                            dihapus dari perangkat ini.
+                        </li>
                     </ul>
                 </div>
                 <div class="modal__footer">
                     <button
                         class="btn btn-primary"
-                        @click="showSafetyInfo = false"
+                        @click="showStorageInfo = false"
                     >
-                        รับทราบ
+                        Tutup
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Toast notifications -->
         <AppToast />
     </div>
 </template>
 
 <style>
-/* ── Global Reset (supplement theme.css) ──────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -191,7 +159,6 @@ body,
     text-rendering: optimizeLegibility;
 }
 
-/* ── App Shell ─────────────────────────────────────────────────────────── */
 .app-layout {
     display: flex;
     flex-direction: column;
@@ -200,7 +167,6 @@ body,
     background: var(--bg-main);
 }
 
-/* ── Tab Bar ───────────────────────────────────────────────────────────── */
 .tab-bar {
     display: flex;
     background: #e8eaf6;
@@ -240,14 +206,12 @@ body,
     color: var(--primary);
 }
 
-/* ── Main Panel ────────────────────────────────────────────────────────── */
 .main-panel {
     flex: 1;
     overflow: hidden;
     background: var(--bg-main);
 }
 
-/* Each tab-pane wrapper fills the entire panel height */
 .tab-pane {
     height: 100%;
     overflow: hidden;

@@ -2,14 +2,14 @@
   <div>
     <!-- Add group -->
     <div class="group-box mb-12">
-      <span class="group-box__title">เพิ่มตัวเลือกค่าตอบแทน</span>
+      <span class="group-box__title">Tambah Opsi Insentif</span>
       <div style="padding-top:12px">
         <div class="flex items-center gap-8 mb-8">
-          <label>จำนวนเงิน (บาท) :</label>
-          <input type="number" v-model.number="newAmount" placeholder="เช่น 125" style="width:120px" min="0" step="0.01" />
-          <label>ป้ายชื่อ :</label>
-          <input type="text" v-model="newLabel" placeholder="เช่น ค่านวด 125 บาท" style="width:200px" />
-          <button class="btn btn-primary" @click="add">➕ เพิ่ม</button>
+          <label>Nominal (฿) :</label>
+          <input type="number" v-model.number="newAmount" placeholder="mis. 125" style="width:120px" min="0" step="0.01" />
+          <label>Label :</label>
+          <input type="text" v-model="newLabel" placeholder="mis. Pijat 125 ฿" style="width:200px" />
+          <button class="btn btn-primary" @click="add">➕ Tambah</button>
         </div>
         <div v-if="msg" class="alert mt-8" :class="msgOk ? 'alert-success' : 'alert-error'">{{ msg }}</div>
       </div>
@@ -17,19 +17,19 @@
 
     <!-- Saved list -->
     <div class="group-box">
-      <span class="group-box__title">ตัวเลือกค่าตอบแทนที่ตั้งค่าไว้</span>
+      <span class="group-box__title">Opsi Insentif Tersimpan</span>
       <div style="padding-top:10px">
         <p class="note mb-8" style="font-size:11px;color:var(--text-gray)">
-          ตัวเลือกเหล่านี้จะปรากฏเป็น checkbox ในหน้าแสดงข้อมูลผู้ป่วย
+          Opsi ini akan muncul sebagai preset saat mengisi data pada halaman Input Data
         </p>
         <div class="table-wrapper" style="max-height:280px">
           <table class="data-table">
             <thead>
               <tr>
                 <th style="width:40px">#</th>
-                <th>จำนวนเงิน (บาท)</th>
-                <th>ป้ายชื่อ</th>
-                <th style="width:60px">ลบ</th>
+                <th>Nominal (฿)</th>
+                <th>Label</th>
+                <th style="width:60px">Hapus</th>
               </tr>
             </thead>
             <tbody>
@@ -40,7 +40,7 @@
                 <td><button class="btn btn-danger btn-sm" @click="del(r.id)">🗑️</button></td>
               </tr>
               <tr v-if="list.length === 0">
-                <td colspan="4" style="text-align:center;color:var(--text-gray);padding:20px">ยังไม่มีตัวเลือก</td>
+                <td colspan="4" style="text-align:center;color:var(--text-gray);padding:20px">Belum ada opsi</td>
               </tr>
             </tbody>
           </table>
@@ -68,11 +68,11 @@ async function load() {
 
 async function add() {
   msg.value = ''
-  if (!newAmount.value || newAmount.value <= 0) { msg.value = 'กรุณาระบุจำนวนเงิน'; msgOk.value = false; return }
-  if (!newLabel.value.trim()) { msg.value = 'กรุณาระบุป้ายชื่อ'; msgOk.value = false; return }
+  if (!newAmount.value || newAmount.value <= 0) { msg.value = 'Masukkan nominal'; msgOk.value = false; return }
+  if (!newLabel.value.trim()) { msg.value = 'Masukkan label'; msgOk.value = false; return }
   try {
     await cmd.addPayoutOption(newAmount.value, newLabel.value.trim())
-    msg.value = `เพิ่มตัวเลือก "${newLabel.value.trim()}" สำเร็จ`
+    msg.value = `Opsi "${newLabel.value.trim()}" berhasil ditambahkan`
     msgOk.value = true
     newAmount.value = null; newLabel.value = ''
     await load()
@@ -80,7 +80,7 @@ async function add() {
 }
 
 async function del(id: number) {
-  if (!confirm('ต้องการลบตัวเลือกนี้ใช่หรือไม่?')) return
+  if (!confirm('Hapus opsi ini?')) return
   try { await cmd.deletePayoutOption(id); await load() }
   catch (e: any) { msg.value = String(e); msgOk.value = false }
 }

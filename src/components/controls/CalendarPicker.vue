@@ -8,7 +8,7 @@
                 :readonly="!allowInput"
                 :value="modelValue"
                 @keydown.enter.prevent="open"
-                aria-label="เลือกวันที่"
+                aria-label="Pilih tanggal"
             />
             <button
                 type="button"
@@ -16,7 +16,7 @@
                 @click="open"
                 :aria-expanded="isOpen"
                 aria-haspopup="dialog"
-                title="เปิดปฏิทิน"
+                title="Buka kalender"
             >
                 <svg
                     width="18"
@@ -50,9 +50,9 @@
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import { Thai } from "flatpickr/dist/l10n/th.js";
+import { Indonesian } from "flatpickr/dist/l10n/id.js";
 
-flatpickr.localize(Thai);
+flatpickr.localize(Indonesian);
 
 // Props & emits
 const props = defineProps({
@@ -70,19 +70,19 @@ const inputEl = ref<HTMLInputElement | null>(null);
 let fpInstance: any = null;
 const isOpen = ref(false);
 
-const thaiMonths = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
+const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
 ];
 
 function open() {
@@ -99,7 +99,7 @@ onMounted(() => {
     if (!inputEl.value) return;
 
     fpInstance = flatpickr(inputEl.value!, {
-        locale: Thai,
+        locale: Indonesian,
         dateFormat: "Y-m-d",
         allowInput: props.allowInput,
         clickOpens: false, // open programmatically
@@ -156,7 +156,7 @@ onMounted(() => {
             monthSelect.style.flex = "0 0 auto";
             monthSelect.style.whiteSpace = "nowrap";
             monthSelect.style.margin = "0";
-            thaiMonths.forEach((m, idx) => {
+            monthNames.forEach((m, idx) => {
                 const o = document.createElement("option");
                 o.value = String(idx);
                 o.text = m;
@@ -179,8 +179,7 @@ onMounted(() => {
             for (let y = start; y <= end; y++) {
                 const o = document.createElement("option");
                 o.value = String(y);
-                // display BE (พ.ศ.) but keep value as CE
-                o.text = String(y + 543);
+                o.text = String(y);
                 yearSelect.appendChild(o);
             }
 
@@ -255,7 +254,7 @@ onMounted(() => {
             const todayBtn = document.createElement("button");
             todayBtn.type = "button";
             todayBtn.className = "cp-today-btn";
-            todayBtn.textContent = "วันนี้";
+            todayBtn.textContent = "Hari ini";
             // Inline styles as flatpickr DOM may be outside scoped CSS
             todayBtn.style.display = "inline-block";
             todayBtn.style.height = "30px";
